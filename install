@@ -1,0 +1,66 @@
+#
+# Source:
+#  https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-centos-7
+#
+
+#
+#
+# Install GPG key
+#
+cd ~
+wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.rpm"
+sudo yum -y localinstall jdk-8u73-linux-x64.rpm
+#Now Java should be installed at /usr/java/jdk1.8.0_73/jre/bin/java, and linked from /usr/bin/java.
+rm ~/jdk-8u*-linux-x64.rpm
+
+#
+#
+# Install public key
+#
+sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch
+
+echo '[elasticsearch-2.x]
+name=Elasticsearch repository for 2.x packages
+baseurl=http://packages.elastic.co/elasticsearch/2.x/centos
+gpgcheck=1
+gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+' | sudo tee /etc/yum.repos.d/elasticsearch.repo
+
+#
+#
+# Install Kibana
+#
+sudo touch /etc/yum.repos.d/kibana.repo
+touch kibana.repo
+
+echo [kibana-4.4] >> kibana.repo
+echo name=Kibana repository for 4.4.x packages >> kibana.repo
+echo baseurl=http://packages.elastic.co/kibana/4.4/centos >> kibana.repo
+echo gpgcheck=1 >> kibana.repo
+echo gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch >> kibana.repo
+echo enabled=1 >> kibana.repo
+
+sudo mv kibana.repo /etc/yum.repos.d/kibana.repo
+
+sudo yum -y install kibana
+
+elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-int --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala)
+
+sudo sed -i "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" /opt/kibana/config/kibana.yml
+
+sudo service kibana start
+
+#
+#
+# Install nginx
+#
+sudo yum -y install epel-release
+sudo yum -y install nginx httpd-tools
+# TODO: sudo htpasswd -c /etc/nginx/htpasswd.users kibanamainuser <password>
+
+sudo cp nginx.conf /etc/nginx
+sudo cp kibana.conf /etc/nginx/conf.d
+
+sudo service nginx start
+
