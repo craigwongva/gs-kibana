@@ -37,7 +37,6 @@ enabled=1
 #
 # Install Kibana
 #
-sudo touch /etc/yum.repos.d/kibana.repo
 touch kibana.repo
 
 echo [kibana-4.4] >> kibana.repo
@@ -63,7 +62,7 @@ sudo service kibana start
 #
 sudo yum -y install epel-release
 sudo yum -y install nginx httpd-tools
-sudo htpasswd -c /etc/nginx/htpasswd.users $1 $1
+sudo htpasswd -cb /etc/nginx/htpasswd.users $1 $1
 
 sudo cp nginx.conf /etc/nginx
 sudo cp kibana.conf /etc/nginx/conf.d

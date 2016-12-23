@@ -1,0 +1,20 @@
+vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text)
+
+subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text)
+
+securitygroupid=$(aws ec2 create-security-group --group-name gsn-kibana-int --vpc-id $vpcid --description "story#11602" –region us-east-1 --output text)
+
+securitygroupid=sg-8c4a72f1
+
+imageid=ami-b73b63a0 #Amazon Linux us-east-1
+
+#This didn't work, so I created it manually:
+# aws iam create-role --role-name gsn-iam-KibanaRole --assume-role-policy-document file://gsn-iam-KibanaRole.json
+
+instanceid1=$(aws ec2 run-instances --image-id $imageid --instance-type t2.micro --count 1 --security-group-ids $securitygroupid --key-name kraig-vpc-2 --subnet-id $subnetid --query Instances[0].InstanceId --output text --region us-east-1 --iam-instance-profile Name=gsn-iam-KibanaRole) #key-name is temporary
+
+publicipaddress1=$(aws ec2 describe-instances --filter Name=instance-id,Values=$instanceid1 --query Reservations[0].Instances[0].PublicIpAddress --output text)
+
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 –region us-east-1 #ultimately 0.0.0.0/0
+
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 –region us-east-1 #ssh is temporary
