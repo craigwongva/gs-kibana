@@ -1,20 +1,36 @@
-vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text)
+export TMP=/tmp/cli
 
-subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text)
+vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
+echo vpcid is $vpcid
 
-securitygroupid=$(aws ec2 create-security-group --group-name gsn-kibana-int --vpc-id $vpcid --description "story#11602" –region us-east-1 --output text)
+subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
+echo subnetid is $subnetid
 
-securitygroupid=sg-8c4a72f1
+#securitygroupid=$(aws ec2 create-security-group --group-name gsn-kibana-int --vpc-id $vpcid --description "story#11602" –region us-east-1 --output text)
 
-imageid=ami-b73b63a0 #Amazon Linux us-east-1
+securitygroupid=sg-8c4a72f1 &> $TMP-1300
+
+imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
 
 #This didn't work, so I created it manually:
 # aws iam create-role --role-name gsn-iam-KibanaRole --assume-role-policy-document file://gsn-iam-KibanaRole.json
 
-instanceid1=$(aws ec2 run-instances --image-id $imageid --instance-type t2.micro --count 1 --security-group-ids $securitygroupid --key-name kraig-vpc-2 --subnet-id $subnetid --query Instances[0].InstanceId --output text --region us-east-1 --iam-instance-profile Name=gsn-iam-KibanaRole) #key-name is temporary
+instanceid1=$(aws ec2 run-instances --image-id $imageid --instance-type t2.micro --count 1 --security-group-ids $securitygroupid --key-name kraig-vpc-2 --subnet-id $subnetid --query Instances[0].InstanceId --output text --region us-east-1 --iam-instance-profile Name=gsn-iam-KibanaRole) &> $TMP-1600 #key-name is temporary
 
-publicipaddress1=$(aws ec2 describe-instances --filter Name=instance-id,Values=$instanceid1 --query Reservations[0].Instances[0].PublicIpAddress --output text)
+echo instanceid1 is $instanceid1
 
-aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 –region us-east-1 #ultimately 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 -–region us-east-1 &> $TMP-1800 #ultimately 0.0.0.0/0
 
-aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 –region us-east-1 #ssh is temporary
+echo just opened its 80 to Beck
+
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 -–region us-east-1 &> $TMP-1900 #ssh is temporary
+
+echo just opened its 22 to Beck
+
+#Allow time for public IP to assigned.
+sleep 120
+
+publicipaddress1=$(aws ec2 describe-instances --filter Name=instance-id,Values=$instanceid1 --query Reservations[0].Instances[0].PublicIpAddress --region us-east-1 --output text) &> $TMP-1700
+
+echo its publicipaddress is $publicipaddress1
+
