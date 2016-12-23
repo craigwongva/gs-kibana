@@ -59,8 +59,8 @@ sudo yum -y install epel-release &> $TMP-2100
 sudo yum -y install nginx httpd-tools &> $TMP-2200
 sudo htpasswd -cb /etc/nginx/htpasswd.users $1 $1 &> $TMP-2300
 
-sudo cp GITHUBFOLDER/nginx.conf /etc/nginx &> $TMP-2400
-sudo cp GITHUBFOLDER/kibana.conf /etc/nginx/conf.d &> $TMP-2500
+sudo cp $GITHUBFOLDER/nginx.conf /etc/nginx &> $TMP-2400
+sudo cp $GITHUBFOLDER/kibana.conf /etc/nginx/conf.d &> $TMP-2500
 
 sudo service nginx start &> $TMP-2600
 
