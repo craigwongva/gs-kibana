@@ -28,13 +28,7 @@ rm ~/jdk-8u*-linux-x64.rpm &> $TMP-1300
 #
 sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch &> $TMP-1400
 
-echo '[elasticsearch-2.x]
-name=Elasticsearch repository for 2.x packages
-baseurl=http://packages.elastic.co/elasticsearch/2.x/centos
-gpgcheck=1
-gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
-enabled=1
-' | sudo tee /etc/yum.repos.d/elasticsearch.repo
+sudo cp $GITHUBFOLDER/elasticsearch.repo /etc/yum.repos.d/elasticsearch.repo &> $TMP-1500
 
 #
 #
