@@ -1,8 +1,13 @@
 #
-# Usage::
-#  install <string> 
-# where string will become both the arbitrary kibana userid and password
+# Usage:
+#  install <space> <userid> 
+# where
+#  <space> is int, test, etc.
+#  <userid> will become both the arbitrary nginx userid and password
 #
+export SPACE=$1
+export NGINXUSERID=$2
+export NGINXPASSWORD=$2
 
 #
 # Source:
@@ -39,7 +44,7 @@ sudo cp $GITHUBFOLDER/kibana.repo /etc/yum.repos.d/kibana.repo &> $TMP-1600
 
 sudo yum -y install kibana &> $TMP-1700
 
-elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-int --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1800
+elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-$SPACE --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1800
 
 sudo sed -i "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" /opt/kibana/config/kibana.yml &> $TMP-1900
 
@@ -51,7 +56,7 @@ sudo service kibana start &> $TMP-2000
 #
 sudo yum -y install epel-release &> $TMP-2100
 sudo yum -y install nginx httpd-tools &> $TMP-2200
-sudo htpasswd -cb /etc/nginx/htpasswd.users $1 $1 &> $TMP-2300
+sudo htpasswd -cb /etc/nginx/htpasswd.users $NGINXUSERID $NGINXPASSWORD &> $TMP-2300
 
 sudo cp $GITHUBFOLDER/nginx.conf /etc/nginx &> $TMP-2400
 sudo cp $GITHUBFOLDER/kibana.conf /etc/nginx/conf.d &> $TMP-2500
