@@ -1,4 +1,10 @@
 #
+# Usage::
+#  install <string> 
+# where string will become both the arbitrary kibana userid and password
+#
+
+#
 # Source:
 #  https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-centos-7
 #
@@ -57,7 +63,7 @@ sudo service kibana start
 #
 sudo yum -y install epel-release
 sudo yum -y install nginx httpd-tools
-# TODO: sudo htpasswd -c /etc/nginx/htpasswd.users kibanamainuser <password>
+sudo htpasswd -c /etc/nginx/htpasswd.users $1 $1
 
 sudo cp nginx.conf /etc/nginx
 sudo cp kibana.conf /etc/nginx/conf.d
