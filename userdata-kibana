@@ -62,5 +62,8 @@ sudo htpasswd -cb /etc/nginx/htpasswd.users $1 $1 &> $TMP-2300
 sudo cp $GITHUBFOLDER/nginx.conf /etc/nginx &> $TMP-2400
 sudo cp $GITHUBFOLDER/kibana.conf /etc/nginx/conf.d &> $TMP-2500
 
+#Allow time for kibana.conf to be saved.
+sleep 15
+
 sudo service nginx start &> $TMP-2600
 
