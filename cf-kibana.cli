@@ -1,3 +1,8 @@
+# Usage:
+#  <thisfile> <space>
+# where space is int, dev, etc.
+
+export SPACE=$1
 export TMP=/tmp/cli
 
 vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
@@ -6,9 +11,11 @@ echo vpcid is $vpcid
 subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
 echo subnetid is $subnetid
 
-#securitygroupid=$(aws ec2 create-security-group --group-name gsn-kibana-int --vpc-id $vpcid --description "story#11602" –region us-east-1 --output text)
+aws ec2 create-security-group --group-name gsn-kibana-$SPACE --description story11062 --region us-east-1
 
-securitygroupid=sg-8c4a72f1 &> $TMP-1300
+securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
+
+#securitygroupid=sg-8c4a72f1 &> $TMP-1300
 
 imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
 
