@@ -15,6 +15,8 @@ aws ec2 create-security-group --group-name gsn-kibana-$SPACE --vpc-id $vpcid --d
 
 securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
 
+echo securitygroupid is $securitygroupid
+
 #securitygroupid=sg-8c4a72f1 &> $TMP-1300
 
 imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
@@ -26,11 +28,12 @@ instanceid1=$(aws ec2 run-instances --image-id $imageid --instance-type t2.micro
 
 echo instanceid1 is $instanceid1
 
-aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 -–region us-east-1 &> $TMP-1800 #ultimately 0.0.0.0/0
-
+#ultimately 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1800
 echo just opened its 80 to Beck
 
-aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 -–region us-east-1 &> $TMP-1900 #ssh is temporary
+#ssh is temporary
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1900
 
 echo just opened its 22 to Beck
 
