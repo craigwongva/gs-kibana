@@ -39,14 +39,6 @@ enabled=1
 #
 # Install Kibana
 #
-touch kibana.repo &> $TMP-1500
-
-echo [kibana-4.4] >> kibana.repo
-echo name=Kibana repository for 4.4.x packages >> kibana.repo
-echo baseurl=http://packages.elastic.co/kibana/4.4/centos >> kibana.repo
-echo gpgcheck=1 >> kibana.repo
-echo gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch >> kibana.repo
-echo enabled=1 >> kibana.repo
 
 sudo mv kibana.repo /etc/yum.repos.d/kibana.repo &> $TMP-1600
 
