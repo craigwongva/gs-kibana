@@ -9,21 +9,23 @@
 #  https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-centos-7
 #
 
+export TMP=/tmp/kibana
+
 #
 #
 # Install GPG key
 #
-cd ~
-wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.rpm"
-sudo yum -y localinstall jdk-8u73-linux-x64.rpm
+cd ~ &> $TMP-1000
+wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.rpm" &> $TMP-1100
+sudo yum -y localinstall jdk-8u73-linux-x64.rpm &> $TMP-1200
 #Now Java should be installed at /usr/java/jdk1.8.0_73/jre/bin/java, and linked from /usr/bin/java.
-rm ~/jdk-8u*-linux-x64.rpm
+rm ~/jdk-8u*-linux-x64.rpm &> $TMP-1300
 
 #
 #
 # Install public key
 #
-sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch
+sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch &> $TMP-1400
 
 echo '[elasticsearch-2.x]
 name=Elasticsearch repository for 2.x packages
@@ -37,7 +39,7 @@ enabled=1
 #
 # Install Kibana
 #
-touch kibana.repo
+touch kibana.repo &> $TMP-1500
 
 echo [kibana-4.4] >> kibana.repo
 echo name=Kibana repository for 4.4.x packages >> kibana.repo
@@ -46,26 +48,26 @@ echo gpgcheck=1 >> kibana.repo
 echo gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch >> kibana.repo
 echo enabled=1 >> kibana.repo
 
-sudo mv kibana.repo /etc/yum.repos.d/kibana.repo
+sudo mv kibana.repo /etc/yum.repos.d/kibana.repo &> $TMP-1600
 
-sudo yum -y install kibana
+sudo yum -y install kibana &> $TMP-1700
 
-elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-int --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala)
+elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-int --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1800
 
-sudo sed -i "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" /opt/kibana/config/kibana.yml
+sudo sed -i "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" /opt/kibana/config/kibana.yml &> $TMP-1900
 
-sudo service kibana start
+sudo service kibana start &> $TMP-2000
 
 #
 #
 # Install nginx
 #
-sudo yum -y install epel-release
-sudo yum -y install nginx httpd-tools
-sudo htpasswd -cb /etc/nginx/htpasswd.users $1 $1
+sudo yum -y install epel-release &> $TMP-2100
+sudo yum -y install nginx httpd-tools &> $TMP-2200
+sudo htpasswd -cb /etc/nginx/htpasswd.users $1 $1 &> $TMP-2300
 
-sudo cp nginx.conf /etc/nginx
-sudo cp kibana.conf /etc/nginx/conf.d
+sudo cp nginx.conf /etc/nginx &> $TMP-2400
+sudo cp kibana.conf /etc/nginx/conf.d &> $TMP-2500
 
-sudo service nginx start
+sudo service nginx start &> $TMP-2600
 
