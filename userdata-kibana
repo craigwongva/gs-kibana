@@ -66,3 +66,8 @@ sleep 15
 
 sudo service nginx start &> $TMP-2600
 
+#
+#
+# Update route53
+#
+./upsert-route53 gsn-kibana-$SPACE &> $TMP-2700
