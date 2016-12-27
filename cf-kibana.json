@@ -30,7 +30,6 @@
     },
     "InstanceType": {"Ref" : "instancetype"},
     "KeyName":  "kraig-vpc-2" ,
-    "VpcId": "vpc-24b17543",
     "SubnetId": "subnet-e387df95",
     "SecurityGroupIds": [
      "sg-8c4a72f1"
