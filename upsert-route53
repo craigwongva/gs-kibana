@@ -1,10 +1,10 @@
 # Usage
 #  thisfile <recordsetname>
-# where <recordsetname> is like 'gsn-kibana-int'
+# where <recordsetname> is like 'gsn-kibana-int', omitting the suffix piazzageo.io
 
 recordsetname=$1
 recordsetvalue=`curl http://169.254.169.254/latest/meta-data/public-ipv4`
 
-echo "{\"Comment\":\"\",\"Changes\":[{\"Action\":\"UPSERT\",\"ResourceRecordSet\":{\"Name\":\"$recordsetname\",\"Type\":\"A\",\"TTL\":300,\"ResourceRecords\":[{\"Value\":\"$recordsetvalue\"}]}}]}" > upsert-route53.json.tmp
+echo "{\"Comment\":\"\",\"Changes\":[{\"Action\":\"UPSERT\",\"ResourceRecordSet\":{\"Name\":\"$recordsetname.piazzageo.io\",\"Type\":\"A\",\"TTL\":300,\"ResourceRecords\":[{\"Value\":\"$recordsetvalue\"}]}}]}" > upsert-route53.json.tmp
 
 sudo -u ec2-user bash -c 'aws route53 change-resource-record-sets --hosted-zone-id Z3CJCO7XTRTAHX --change-batch file://upsert-route53.json.tmp'
