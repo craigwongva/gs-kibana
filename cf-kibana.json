@@ -52,7 +52,22 @@
 "#!/bin/bash -ex\n",
 "yum install git -y\n",
 "sudo -u ec2-user bash -c 'cd /home/ec2-user; git clone https://github.com/craigwongva/gs-kibana.git > /tmp/u01 2>&1 '\n",
-"sudo -u ec2-user bash -c 'cd /home/ec2-user/gs-kibana; ./userdata-kibana int shad > /tmp/u02 2>&1'\n"
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "sudo -u ec2-user bash -c 'cd /home/ec2-user/gs-kibana; ./userdata-kibana ",
+                      {
+                        "Ref": "space"
+                      },
+                      " ",
+                      {
+                        "Ref": "guiPassword"
+                      },
+                      " > /tmp/u02 2>&1'\n"
+                    ]
+                  ]
+                }
      ]
     ]}}
    }
