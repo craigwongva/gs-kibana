@@ -14,7 +14,13 @@
  "securityGroupId" : {
   "Type" : "String"
  },
- "instancetype" : {
+ "instanceType" : {
+  "Type" : "String"
+ },
+ "guiPassword" : {
+  "Type" : "String"
+ },
+ "space" : {
   "Type" : "String"
  }
 },
@@ -34,9 +40,9 @@
       "amazonlinuxami"
      ]
     },
-    "InstanceType": {"Ref" : "instancetype"},
+    "InstanceType": {"Ref" : "instanceType"},
     "KeyName":  "kraig-vpc-2" ,
-    "SubnetId": {"Ref" : "subnetid"},
+    "SubnetId": {"Ref" : "subnetId"},
     "SecurityGroupIds": [
      {"Ref" : "securityGroupId"}
     ],
@@ -46,7 +52,7 @@
 "#!/bin/bash -ex\n",
 "yum install git -y\n",
 "sudo -u ec2-user bash -c 'cd /home/ec2-user; git clone https://github.com/craigwongva/gs-kibana.git > /tmp/u01 2>&1 '\n",
-"sudo -u ec2-user bash -c 'cd /home/ec2-user/gs-kibana; ./userdata-kibana > /tmp/u02 2>&1'\n"
+"sudo -u ec2-user bash -c 'cd /home/ec2-user/gs-kibana; ./userdata-kibana int shad > /tmp/u02 2>&1'\n"
      ]
     ]}}
    }
