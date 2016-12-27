@@ -8,6 +8,12 @@
   }
 },
 "Parameters" : {
+ "subnetId" : {
+  "Type" : "String"
+ },
+ "securityGroupId" : {
+  "Type" : "String"
+ },
  "instancetype" : {
   "Type" : "String"
  }
@@ -30,9 +36,9 @@
     },
     "InstanceType": {"Ref" : "instancetype"},
     "KeyName":  "kraig-vpc-2" ,
-    "SubnetId": "subnet-e387df95",
+    "SubnetId": {"Ref" : "subnetid"},
     "SecurityGroupIds": [
-     "sg-8c4a72f1"
+     {"Ref" : "securityGroupId"}
     ],
     "IamInstanceProfile": "gsn-iam-KibanaRole",
     "UserData": {"Fn::Base64": {"Fn::Join": ["",
