@@ -14,7 +14,7 @@ export NGINXPASSWORD=$2
 #  https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-centos-7
 #
 
-export GITHUBFOLDER=~/gs-kibana
+export GITHUBFOLDER=/home/ec2-user/gs-kibana
 export TMP=/tmp/kibana
 
 #
@@ -25,7 +25,7 @@ cd ~ &> $TMP-1000
 wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.rpm" &> $TMP-1100
 sudo yum -y localinstall jdk-8u73-linux-x64.rpm &> $TMP-1200
 #Now Java should be installed at /usr/java/jdk1.8.0_73/jre/bin/java, and linked from /usr/bin/java.
-rm ~/jdk-8u*-linux-x64.rpm &> $TMP-1300
+rm /home/ec2-user/jdk-8u*-linux-x64.rpm &> $TMP-1300
 
 #
 #
@@ -70,4 +70,5 @@ sudo service nginx start &> $TMP-2600
 #
 # Update route53
 #
+cd $GITHUBFOLDER
 ./upsert-route53 gsn-kibana-$SPACE &> $TMP-2700
