@@ -5,6 +5,13 @@
 "Mappings": {
   "EC2RegionMap": {
    "us-east-1": {"amazonlinuxami": "ami-9be6f38c"}
+  },
+  "SpaceMap" : {
+   "int" :   { "0" : "gsn" },
+   "test" :  { "0" : "gsn" },
+   "dev" :   { "0" : "gsn" },
+   "stage" : { "0" : "gsn" },
+   "prod" :  { "0" : "gsp" }
   }
 },
 "Parameters" : {
@@ -35,7 +42,9 @@
                   "Fn::Join": [
                     "",
                     [
-                      "gsn-elasticsearch-int"
+                      "gsn", 
+                      { "Fn::FindInMap" : [ "SpaceMap", { "Ref" : "space }, "0"]},
+		      "-elasticsearch-int"
                     ]
                   ]
                 }
@@ -59,7 +68,7 @@
                   "Fn::Join": [
                     "",
                     [
-                      "gsn-iam-KibanaRole"
+                      "gsn", "-iam-KibanaRole"
                     ]
                   ]
                 },
