@@ -6,7 +6,7 @@
 #  <userid> will become both the arbitrary nginx userid and password
 #
 export SPACE=$1
-export NGINXUSERID=$2
+export NGINXUSERID=kibana
 export NGINXPASSWORD=$2
 
 #

@@ -9,6 +9,8 @@ export SPACE=$2
 export GUIPASSWORD=$3
 export TMP=/tmp/cli
 
+./elasticsearch.cli $SPACE &> $TMP-0900
+
 #This didn't work, so I created it manually:
 # aws iam create-role --role-name gsn-iam-KibanaRole --assume-role-policy-document file://gsn-iam-KibanaRole.json
 
