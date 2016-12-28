@@ -43,7 +43,8 @@
                     "",
                     [
                       { "Fn::FindInMap" : [ "SpaceMap", { "Ref" : "space" }, "0"]},
-		      "-elasticsearch-int"
+		      "-elasticsearch-",
+                      { "Ref" : "space" }
                     ]
                   ]
                 }
