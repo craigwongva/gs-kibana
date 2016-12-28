@@ -9,6 +9,17 @@ export SPACE=$1
 export NGINXUSERID=kibana
 export NGINXPASSWORD=$2
 
+if [ $SPACE = 'prod' ]; then
+ gstype='gsp'
+else
+ if [[ $SPACE = 'int' || $SPACE = 'test' || $SPACE = 'dev' || $SPACE = 'stage' ]]; then
+  gstype='gsn'
+ else
+  echo Space must be either int, test, dev, stage or prod. It''s $SPACE
+  exit 1
+ fi
+fi
+
 #
 # Source:
 #  https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-centos-7
@@ -44,7 +55,11 @@ sudo cp $GITHUBFOLDER/kibana.repo /etc/yum.repos.d/kibana.repo &> $TMP-1600
 
 sudo yum -y install kibana &> $TMP-1700
 
-elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-$SPACE --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1800
+if [ $gstype = 'gsp' ]; then
+ elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsp-elasticsearch-$SPACE --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1800
+else
+ elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-$SPACE --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1805
+fi
 
 sudo sed -i "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" /opt/kibana/config/kibana.yml &> $TMP-1900
 
@@ -71,4 +86,8 @@ sudo service nginx start &> $TMP-2600
 # Update route53
 #
 cd $GITHUBFOLDER
-./upsert-route53 gsn-kibana-$SPACE &> $TMP-2700
+if [ $gstype = 'gsp' ]; then
+ ./upsert-route53 gsp-kibana-$SPACE &> $TMP-2700
+else
+ ./upsert-route53 gsn-kibana-$SPACE &> $TMP-2705
+fi

@@ -9,28 +9,43 @@ export SPACE=$2
 export GUIPASSWORD=$3
 export TMP=/tmp/cli
 
+if [ $SPACE = 'prod' ]; then 
+ gstype='gsp'
+else 
+ if [[ $SPACE = 'int' || $SPACE = 'test' || $SPACE = 'dev' || $SPACE = 'stage' ]]; then 
+  gstype='gsn'
+ else 
+  echo Space must be either int, test, dev, stage or prod. It''s $SPACE
+  exit 1
+ fi
+fi
+
+exit 0
+
 ./elasticsearch.cli $SPACE &> $TMP-0900
 
 #This didn't work, so I created it manually:
 # aws iam create-role --role-name gsn-iam-KibanaRole --assume-role-policy-document file://gsn-iam-KibanaRole.json
 
-vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
+if [ $gstype = 'gsp' ]; then
+ vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsp-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
+ subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsp-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
+ aws ec2 create-security-group --group-name gsp-kibana-$SPACE --vpc-id $vpcid --description "story#11062" --region us-east-1
+ securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsp-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
+else
+ vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1005
+ subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
+ aws ec2 create-security-group --group-name gsn-kibana-$SPACE --vpc-id $vpcid --description "story#11062" --region us-east-1
+ securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
+fi
 echo vpcid is $vpcid
-
-subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
 echo subnetid is $subnetid
-
-aws ec2 create-security-group --group-name gsn-kibana-$SPACE --vpc-id $vpcid --description "story#11062" --region us-east-1
-securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
 echo securitygroupid is $securitygroupid
 
 aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1800
-echo just opened its 80 to Beck
-
 aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1900
-echo just opened its 22 to Beck
 
 imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
 echo imageid is $imageid
 
-aws cloudformation create-stack --stack-name $STACK --template-url https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json --region us-east-1 --parameters ParameterKey=instanceType,ParameterValue=t2.micro ParameterKey=subnetId,ParameterValue=subnet-e387df95 ParameterKey=securityGroupId,ParameterValue=sg-8c4a72f1 ParameterKey=guiPassword,ParameterValue=$GUIPASSWORD ParameterKey=space,ParameterValue=$SPACE
+aws cloudformation create-stack --stack-name $STACK --template-url https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json --region us-east-1 --parameters ParameterKey=instanceType,ParameterValue=t2.micro ParameterKey=subnetId,ParameterValue=$subnetid ParameterKey=securityGroupId,ParameterValue=$securitygroupid ParameterKey=guiPassword,ParameterValue=$GUIPASSWORD ParameterKey=space,ParameterValue=$SPACE
