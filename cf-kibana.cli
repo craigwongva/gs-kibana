@@ -1,8 +1,12 @@
 # Usage:
-#  <thisfile> <space>
+#  <thisfile> <stack> <space> <guipassword>
+# where stack is like craigkibana8
 # where space is int, dev, etc.
+# where guipassword is anything like mypassword
 
-export SPACE=$1
+export STACK=$1
+export SPACE=$2
+export GUIPASSWORD=$3
 export TMP=/tmp/cli
 
 #This didn't work, so I created it manually:
@@ -27,14 +31,4 @@ echo just opened its 22 to Beck
 imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
 echo imageid is $imageid
 
-aws cloudformation create-stack --stack-name craigkibana7 --template-url https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json --region us-east-1 --parameters ParameterKey=instanceType,ParameterValue=t2.micro ParameterKey=subnetId,ParameterValue=subnet-e387df95 ParameterKey=securityGroupId,ParameterValue=sg-8c4a72f1 ParameterKey=guiPassword,ParameterValue=white ParameterKey=space,ParameterValue=int
-
-#instanceid1=$(aws ec2 run-instances --image-id $imageid --instance-type t2.micro --count 1 --security-group-ids $securitygroupid --key-name kraig-vpc-2 --subnet-id $subnetid --query Instances[0].InstanceId --output text --region us-east-1 --iam-instance-profile Name=gsn-iam-KibanaRole) &> $TMP-1600 
-#echo instanceid1 is $instanceid1
-
-##Allow time for public IP to assigned.
-#sleep 120
-
-#publicipaddress1=$(aws ec2 describe-instances --filter Name=instance-id,Values=$instanceid1 --query Reservations[0].Instances[0].PublicIpAddress --region us-east-1 --output text) &> $TMP-1700
-#echo its publicipaddress is $publicipaddress1
-
+aws cloudformation create-stack --stack-name $STACK --template-url https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json --region us-east-1 --parameters ParameterKey=instanceType,ParameterValue=t2.micro ParameterKey=subnetId,ParameterValue=subnet-e387df95 ParameterKey=securityGroupId,ParameterValue=sg-8c4a72f1 ParameterKey=guiPassword,ParameterValue=$GUIPASSWORD ParameterKey=space,ParameterValue=$SPACE
