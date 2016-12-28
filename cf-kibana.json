@@ -42,7 +42,6 @@
                   "Fn::Join": [
                     "",
                     [
-                      "gsn", 
                       { "Fn::FindInMap" : [ "SpaceMap", { "Ref" : "space" }, "0"]},
 		      "-elasticsearch-int"
                     ]
@@ -68,7 +67,8 @@
                   "Fn::Join": [
                     "",
                     [
-                      "gsn", "-iam-KibanaRole"
+                      { "Fn::FindInMap" : [ "SpaceMap", { "Ref" : "space" }, "0"]},
+                      "-iam-KibanaRole"
                     ]
                   ]
                 },
