@@ -20,7 +20,6 @@ else
  fi
 fi
 
-exit 0
 
 ./elasticsearch.cli $SPACE &> $TMP-0900
 

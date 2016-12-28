@@ -30,7 +30,15 @@
    "Properties": {
     "Tags" : [{
      "Key":"Name",
-     "Value":"gsn-elasticsearch-int"
+     "Value":
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "gsn-elasticsearch-int"
+                    ]
+                  ]
+                }
     }],
     "ImageId": {
      "Fn::FindInMap": [
@@ -46,7 +54,15 @@
     "SecurityGroupIds": [
      {"Ref" : "securityGroupId"}
     ],
-    "IamInstanceProfile": "gsn-iam-KibanaRole",
+    "IamInstanceProfile": 
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "gsn-iam-KibanaRole"
+                    ]
+                  ]
+                },
     "UserData": {"Fn::Base64": {"Fn::Join": ["",
      [
 "#!/bin/bash -ex\n",
