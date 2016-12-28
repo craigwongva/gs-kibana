@@ -5,6 +5,9 @@
 export SPACE=$1
 export TMP=/tmp/cli
 
+#This didn't work, so I created it manually:
+# aws iam create-role --role-name gsn-iam-KibanaRole --assume-role-policy-document file://gsn-iam-KibanaRole.json
+
 vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
 echo vpcid is $vpcid
 
@@ -12,35 +15,26 @@ subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: pub
 echo subnetid is $subnetid
 
 aws ec2 create-security-group --group-name gsn-kibana-$SPACE --vpc-id $vpcid --description "story#11062" --region us-east-1
-
 securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
-
 echo securitygroupid is $securitygroupid
 
-#securitygroupid=sg-8c4a72f1 &> $TMP-1300
-
-imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
-
-#This didn't work, so I created it manually:
-# aws iam create-role --role-name gsn-iam-KibanaRole --assume-role-policy-document file://gsn-iam-KibanaRole.json
-
-instanceid1=$(aws ec2 run-instances --image-id $imageid --instance-type t2.micro --count 1 --security-group-ids $securitygroupid --key-name kraig-vpc-2 --subnet-id $subnetid --query Instances[0].InstanceId --output text --region us-east-1 --iam-instance-profile Name=gsn-iam-KibanaRole) &> $TMP-1600 #key-name is temporary
-
-echo instanceid1 is $instanceid1
-
-#ultimately 0.0.0.0/0
 aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1800
 echo just opened its 80 to Beck
 
-#ssh is temporary
 aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1900
-
 echo just opened its 22 to Beck
 
-#Allow time for public IP to assigned.
-sleep 120
+imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
+echo imageid is $imageid
 
-publicipaddress1=$(aws ec2 describe-instances --filter Name=instance-id,Values=$instanceid1 --query Reservations[0].Instances[0].PublicIpAddress --region us-east-1 --output text) &> $TMP-1700
+aws cloudformation create-stack --stack-name craigkibana7 --template-url https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json --region us-east-1 --parameters ParameterKey=instanceType,ParameterValue=t2.micro ParameterKey=subnetId,ParameterValue=subnet-e387df95 ParameterKey=securityGroupId,ParameterValue=sg-8c4a72f1 ParameterKey=guiPassword,ParameterValue=white ParameterKey=space,ParameterValue=int
 
-echo its publicipaddress is $publicipaddress1
+#instanceid1=$(aws ec2 run-instances --image-id $imageid --instance-type t2.micro --count 1 --security-group-ids $securitygroupid --key-name kraig-vpc-2 --subnet-id $subnetid --query Instances[0].InstanceId --output text --region us-east-1 --iam-instance-profile Name=gsn-iam-KibanaRole) &> $TMP-1600 
+#echo instanceid1 is $instanceid1
+
+##Allow time for public IP to assigned.
+#sleep 120
+
+#publicipaddress1=$(aws ec2 describe-instances --filter Name=instance-id,Values=$instanceid1 --query Reservations[0].Instances[0].PublicIpAddress --region us-east-1 --output text) &> $TMP-1700
+#echo its publicipaddress is $publicipaddress1
 
