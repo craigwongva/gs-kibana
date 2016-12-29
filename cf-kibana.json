@@ -1,108 +1,168 @@
 {
-"AWSTemplateFormatVersion": "2010-09-09",
-"Description": "",
-
-"Mappings": {
-  "EC2RegionMap": {
-   "us-east-1": {"amazonlinuxami": "ami-9be6f38c"}
-  },
-  "SpaceMap" : {
-   "int" :   { "0" : "gsn" },
-   "test" :  { "0" : "gsn" },
-   "dev" :   { "0" : "gsn" },
-   "stage" : { "0" : "gsn" },
-   "prod" :  { "0" : "gsp" }
-  }
-},
-"Parameters" : {
- "subnetId" : {
-  "Type" : "String"
- },
- "securityGroupId" : {
-  "Type" : "String"
- },
- "instanceType" : {
-  "Type" : "String"
- },
- "guiPassword" : {
-  "Type" : "String"
- },
- "space" : {
-  "Type" : "String"
- }
-},
-"Resources": {
-  "Server": {
-   "Type": "AWS::EC2::Instance",
-   "Properties": {
-    "Tags" : [{
-     "Key":"Name",
-     "Value":
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      { "Fn::FindInMap" : [ "SpaceMap", { "Ref" : "space" }, "0"]},
-		      "-kibana-",
-                      { "Ref" : "space" }
-                    ]
-                  ]
-                }
-    }],
-    "ImageId": {
-     "Fn::FindInMap": [
-      "EC2RegionMap", {
-       "Ref": "AWS::Region"
-      },
-      "amazonlinuxami"
-     ]
+  "AWSTemplateFormatVersion":"2010-09-09",
+  "Description":"",
+  "Mappings":{
+    "EC2RegionMap":{
+      "us-east-1":{
+        "amazonlinuxami":"ami-9be6f38c"
+      }
     },
-    "InstanceType": {"Ref" : "instanceType"},
-    "KeyName":  "kraig-vpc-2" ,
-    "SubnetId": {"Ref" : "subnetId"},
-    "SecurityGroupIds": [
-     {"Ref" : "securityGroupId"}
-    ],
-    "IamInstanceProfile": 
-                {
-                  "Fn::Join": [
-                    "",
-                    [
-                      { "Fn::FindInMap" : [ "SpaceMap", { "Ref" : "space" }, "0"]},
-                      "-iam-KibanaRole"
+    "SpaceMap":{
+      "int":{
+        "0":"gsn"
+      },
+      "test":{
+        "0":"gsn"
+      },
+      "dev":{
+        "0":"gsn"
+      },
+      "stage":{
+        "0":"gsn"
+      },
+      "prod":{
+        "0":"gsp"
+      }
+    }
+  },
+  "Parameters":{
+    "subnetId":{
+      "Type":"String"
+    },
+    "securityGroupId":{
+      "Type":"String"
+    },
+    "instanceType":{
+      "Type":"String"
+    },
+    "guiPassword":{
+      "Type":"String"
+    },
+    "space":{
+      "Type":"String"
+    }
+  },
+  "Resources":{
+    "Server":{
+      "Type":"AWS::EC2::Instance",
+      "Properties":{
+        "Tags":[
+          {
+            "Key":"Name",
+            "Value":{
+              "Fn::Join":[
+                "",
+                [
+                  {
+                    "Fn::FindInMap":[
+                      "SpaceMap",
+                      {
+                        "Ref":"space"
+                      },
+                      "0"
                     ]
-                  ]
-                },
-    "UserData": {"Fn::Base64": {"Fn::Join": ["",
-     [
-"#!/bin/bash -ex\n",
-"yum install git -y\n",
-"sudo -u ec2-user bash -c 'cd /home/ec2-user; git clone https://github.com/craigwongva/gs-kibana.git > /tmp/u01 2>&1 '\n",
+                  },
+                  "-kibana-",
+                  {
+                    "Ref":"space"
+                  }
+                ]
+              ]
+            }
+          },
+          {
+            "Key":"Project",
+            "Value":{
+              "Fn::Join":[
+                "",
+                [
+                  "piazza-",
+                  {
+                    "Ref":"space"
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "ImageId":{
+          "Fn::FindInMap":[
+            "EC2RegionMap",
+            {
+              "Ref":"AWS::Region"
+            },
+            "amazonlinuxami"
+          ]
+        },
+        "InstanceType":{
+          "Ref":"instanceType"
+        },
+        "KeyName":"kraig-vpc-2",
+        "SubnetId":{
+          "Ref":"subnetId"
+        },
+        "SecurityGroupIds":[
+          {
+            "Ref":"securityGroupId"
+          }
+        ],
+        "IamInstanceProfile":{
+          "Fn::Join":[
+            "",
+            [
+              {
+                "Fn::FindInMap":[
+                  "SpaceMap",
+                  {
+                    "Ref":"space"
+                  },
+                  "0"
+                ]
+              },
+              "-iam-KibanaRole"
+            ]
+          ]
+        },
+        "UserData":{
+          "Fn::Base64":{
+            "Fn::Join":[
+              "",
+              [
+                "#!/bin/bash -ex\n",
+                "yum install git -y\n",
+                "sudo -u ec2-user bash -c 'cd /home/ec2-user; git clone https://github.com/craigwongva/gs-kibana.git > /tmp/u01 2>&1 '\n",
                 {
-                  "Fn::Join": [
+                  "Fn::Join":[
                     "",
                     [
                       "sudo -u ec2-user bash -c 'cd /home/ec2-user/gs-kibana; ./userdata-kibana ",
                       {
-                        "Ref": "space"
+                        "Ref":"space"
                       },
                       " ",
                       {
-                        "Ref": "guiPassword"
+                        "Ref":"guiPassword"
                       },
                       " > /tmp/u02 2>&1'\n"
                     ]
                   ]
                 }
-     ]
-    ]}}
-   }
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Outputs":{
+    "InstanceID":{
+      "Description":"instance ID",
+      "Value":{
+        "Fn::GetAtt":[
+          "Server",
+          "PublicIp"
+        ]
+      }
+    }
   }
-},
-"Outputs" : {
-  "InstanceID" : {
-    "Description": "instance ID",  
-    "Value" : { "Fn::GetAtt" : [ "Server" , "PublicIp" ] }
-  }
-}
 }

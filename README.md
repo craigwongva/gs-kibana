@@ -8,3 +8,9 @@ Sign onto AdministratorAccess instance.
 ./cf-kibana.cli <space>
 
 Browse at http://95.95.95.95
+
+Here is the calling sequence:
+1-cf-kibana.cli
+1.1-elasticsearch.cli
+1.2-userdata-kibana
+1.2.1-upsert-route53
