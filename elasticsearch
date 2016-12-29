@@ -1,44 +1,55 @@
 #!/bin/bash 
-
-# Usage:
-#  <thisfile> <space>
-# where space is int, dev, etc.
 #
-# Purpose:
-#  Open ES gateway EC2 instance's security group
-#   for 9200 and 9300 for public subnet A's CIDR.
+# Open ES gateway instance's security group
+#  on private subnet A
+#  for public subnet A's CIDR.
 #
-#  Note it is assumed that the NACL for the
-#   ES gateway EC2 instance's private subnet A is
-#   already open for 9200 and 9300 (both ingress 
-#   and egress) for the public subnet A.
-# 
+# Note:
+# 1. It is assumed that the NACL for the
+#    ES gateway EC2 instance's private subnet A is
+#    already open for 9200 and 9300 (both ingress 
+#    and egress) for the public subnet A.
 
-SPACE=$1
+##
+# Validate parameters.
+##
 
-if [ $SPACE = 'prod' ]; then
+space=$1
+
+if [ $space = 'prod' ]; then
  gstype='gsp'
 else
- if [[ $SPACE = 'int' || $SPACE = 'test' || $SPACE = 'dev' || $SPACE = 'stage' ]]; then
+ if [[ $space = 'int' || $space = 'test' || $space = 'dev' || $space = 'stage' ]]; then
   gstype='gsn'
  else
-  echo Space must be either int, test, dev, stage or prod. It''s $SPACE
+  echo Space must be either int, test, dev, stage or prod. It''s $space
   exit 1
  fi
 fi
 
+##
+# Look up values to be passed during security group update.
+##
+
 if [ $gstype = 'gsp' ]; then
  vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsp-vpc" --region us-east-1 --query Vpcs[].VpcId --output text)
  publicsubnetcidr=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsp-vpc: public A" --query Subnets[].CidrBlock --region us-east-1 --output text)
- esgatewayinstancesecuritygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsp-secgrp-$SPACE-ElasticsearchGateway* --region us-east-1 --query SecurityGroups[].GroupId --output text)
+ esgatewayinstancesecuritygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsp-secgrp-$space-ElasticsearchGateway* --region us-east-1 --query SecurityGroups[].GroupId --output text)
 else
  vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text)
  publicsubnetcidr=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --query Subnets[].CidrBlock --region us-east-1 --output text)
- esgatewayinstancesecuritygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-secgrp-$SPACE-ElasticsearchGateway* --region us-east-1 --query SecurityGroups[].GroupId --output text)
+ esgatewayinstancesecuritygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-secgrp-$space-ElasticsearchGateway* --region us-east-1 --query SecurityGroups[].GroupId --output text)
 fi
 
 echo publicsubnetcidr is $publicsubnetcidr
 echo esgatewayinstancesecuritygroupid is $esgatewayinstancesecuritygroupid
 
-aws ec2 authorize-security-group-ingress --group-id $esgatewayinstancesecuritygroupid --protocol tcp --port 9200 --cidr $publicsubnetcidr --region us-east-1
-aws ec2 authorize-security-group-ingress --group-id $esgatewayinstancesecuritygroupid --protocol tcp --port 9300 --cidr $publicsubnetcidr --region us-east-1
+aws ec2 authorize-security-group-ingress \
+  --group-id $esgatewayinstancesecuritygroupid \
+  --protocol tcp --port 9200 \
+  --cidr $publicsubnetcidr --region us-east-1
+
+aws ec2 authorize-security-group-ingress 
+  --group-id $esgatewayinstancesecuritygroupid \
+  --protocol tcp --port 9300 \
+  --cidr $publicsubnetcidr --region us-east-1

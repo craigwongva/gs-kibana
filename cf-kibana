@@ -1,10 +1,15 @@
 #!/bin/bash 
+#
+# Create a Kibana stack.
 
 export TMP=/tmp/cli
 
+##
+# Validate parameters.
+##
+
 if [ $# -lt 3 ]
   then
-    BLANKS='xx'
     echo Usage:
     echo '  ' \<thisfile\> \<stack\> \<space\> \<guipassword\>
     echo where 
@@ -14,52 +19,78 @@ if [ $# -lt 3 ]
     exit 1
 fi
 
-STACK=$1
-SPACE=$2
-GUIPASSWORD=$3
+stack=$1
+space=$2
+guipassword=$3
 
-if [[ $SPACE = 'int' || $SPACE = 'test' || $SPACE = 'dev' || $SPACE = 'stage' || $SPACE = 'prod' ]]; then
+if [[ $space = 'int' || $space = 'test' || $space = 'dev' || $space = 'stage' || $space = 'prod' ]]; then
   echo thanks
 else
   echo The space parameter value must be either int, dev, test, stage or prod.
   exit 1
 fi
 
-if [ $SPACE = 'prod' ]; then 
+if [ $space = 'prod' ]; then 
  gstype='gsp'
 else 
- if [[ $SPACE = 'int' || $SPACE = 'test' || $SPACE = 'dev' || $SPACE = 'stage' ]]; then 
+ if [[ $space = 'int' || $space = 'test' || $space = 'dev' || $space = 'stage' ]]; then 
   gstype='gsn'
  else 
-  echo Space must be either int, test, dev, stage or prod. It''s $SPACE
+  echo Space must be either int, test, dev, stage or prod. It''s $space
   exit 1
  fi
 fi
 
-./elasticsearch.cli $SPACE &> $TMP-0900
+##
+# Modify Kibana's Elasticsearch's instances' security group.
+##
 
-#This didn't work, so I created it manually:
-# aws iam create-role --role-name gsn-iam-KibanaRole --assume-role-policy-document file://gsn-iam-KibanaRole.json
+./elasticsearch.cli $space &> $TMP-0900
+
+##
+# Look up values to be passed into CloudFormation.
+##
 
 if [ $gstype = 'gsp' ]; then
  vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsp-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
  subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsp-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
- aws ec2 create-security-group --group-name gsp-kibana-$SPACE --vpc-id $vpcid --description "story#11062" --region us-east-1
- securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsp-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
+ aws ec2 create-security-group --group-name gsp-kibana-$space --vpc-id $vpcid --description "story#11062" --region us-east-1
+ securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsp-kibana-$space --region us-east-1 --query SecurityGroups[].GroupId --output text)
 else
  vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1005
  subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
- aws ec2 create-security-group --group-name gsn-kibana-$SPACE --vpc-id $vpcid --description "story#11062" --region us-east-1
- securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$SPACE --region us-east-1 --query SecurityGroups[].GroupId --output text)
+ aws ec2 create-security-group --group-name gsn-kibana-$space --vpc-id $vpcid --description "story#11062" --region us-east-1
+ securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$space --region us-east-1 --query SecurityGroups[].GroupId --output text)
 fi
+
 echo vpcid is $vpcid
 echo subnetid is $subnetid
 echo securitygroupid is $securitygroupid
 
-aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 80 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1800
-aws ec2 authorize-security-group-ingress --group-id $securitygroupid --protocol tcp --port 22 --cidr 68.100.234.63/32 --region us-east-1 &> $TMP-1900
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid \
+  --protocol tcp --port 80 --cidr 68.100.234.63/32 \
+  --region us-east-1 &> $TMP-1800
 
-imageid=ami-b73b63a0 &> $TMP-1400 #Amazon Linux us-east-1
+aws ec2 authorize-security-group-ingress --group-id $securitygroupid \
+  --protocol tcp --port 22 --cidr 68.100.234.63/32 \
+  --region us-east-1 &> $TMP-1900
+
+imageid=ami-b73b63a0 &> $TMP-1950 #Amazon Linux us-east-1
 echo imageid is $imageid
 
-aws cloudformation create-stack --stack-name $STACK --template-url https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json --region us-east-1 --parameters ParameterKey=instanceType,ParameterValue=t2.micro ParameterKey=subnetId,ParameterValue=$subnetid ParameterKey=securityGroupId,ParameterValue=$securitygroupid ParameterKey=guiPassword,ParameterValue=$GUIPASSWORD ParameterKey=space,ParameterValue=$SPACE
+##
+# Create the stack via CloudFormation.
+#
+# Note:
+# 1. This repo's name is hardcoded into the template's userdata area.
+##
+
+aws cloudformation create-stack --stack-name $stack \
+  --template-url \
+    https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json \
+  --region us-east-1 \
+  --parameters ParameterKey=instanceType,ParameterValue=t2.micro \
+    ParameterKey=subnetId,ParameterValue=$subnetid \
+    ParameterKey=securityGroupId,ParameterValue=$securitygroupid \
+    ParameterKey=guiPassword,ParameterValue=$guipassword \
+    ParameterKey=space,ParameterValue=$space

@@ -1,4 +1,8 @@
-# Usage
+#!/bin/bash
+#
+# Update hosted zone recordset for new Kibana instance.
+#
+# Usage:
 #  thisfile <recordsetname>
 # where <recordsetname> is like 'gsn-kibana-int', omitting the suffix piazzageo.io
 
