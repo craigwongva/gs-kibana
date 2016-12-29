@@ -80,7 +80,7 @@ else
    --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1210
 
  aws ec2 create-security-group --group-name gsn-kibana-${space} \
-   --vpc-id $vpcid --description "story#11062" --region us-east-1 &> $TMP-1220
+   --vpc-id $vpcid --description "${gstype}-kibana-${space}" --region us-east-1 &> $TMP-1220
 
  securitygroupid=$(aws ec2 describe-security-groups \
    --filter Name=group-name,Values=gsn-kibana-${space} \
