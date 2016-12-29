@@ -65,26 +65,26 @@ if [ $gstype = 'gsp' ]; then
    --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
 
  aws ec2 create-security-group --group-name gsp-kibana-${space} \
-   --vpc-id $vpcid --description "story#11062" --region us-east-1
+   --vpc-id $vpcid --description "story#11062" --region us-east-1 &> $TMP-1110
 
  securitygroupid=$( \
    aws ec2 describe-security-groups \
    --filter Name=group-name,Values=gsp-kibana-${space} \
-   --region us-east-1 --query SecurityGroups[].GroupId --output text)
+   --region us-east-1 --query SecurityGroups[].GroupId --output text) &> $TMP-1120
 else
  vpcid=$( \
    aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" \
-   --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1005
+   --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1200
  subnetid=$( \
    aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" \
-   --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
+   --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1210
 
  aws ec2 create-security-group --group-name gsn-kibana-${space} \
-   --vpc-id $vpcid --description "story#11062" --region us-east-1
+   --vpc-id $vpcid --description "story#11062" --region us-east-1 &> $TMP-1220
 
  securitygroupid=$(aws ec2 describe-security-groups \
    --filter Name=group-name,Values=gsn-kibana-${space} \
-   --region us-east-1 --query SecurityGroups[].GroupId --output text)
+   --region us-east-1 --query SecurityGroups[].GroupId --output text) &> $TMP-1300
 fi
 
 echo vpcid is ${vpcid}
@@ -117,4 +117,4 @@ aws cloudformation create-stack --stack-name $stack \
     ParameterKey=subnetId,ParameterValue=${subnetid} \
     ParameterKey=securityGroupId,ParameterValue=${securitygroupid} \
     ParameterKey=guiPassword,ParameterValue=${guipassword} \
-    ParameterKey=space,ParameterValue=${space}
+    ParameterKey=space,ParameterValue=${space} &> $TMP-2000
