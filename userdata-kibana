@@ -15,7 +15,7 @@ GITHUBFOLDER=/home/ec2-user/gs-kibana
 ##
 
 space=$1
-nginxuserid=kibana
+nginxuserid=gs
 nginxpassword=$2
 
 if [ ${space} = 'prod' ]; then

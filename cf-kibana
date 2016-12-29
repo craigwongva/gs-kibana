@@ -65,7 +65,7 @@ if [ $gstype = 'gsp' ]; then
    --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
 
  aws ec2 create-security-group --group-name gsp-kibana-${space} \
-   --vpc-id $vpcid --description "story#11062" --region us-east-1 &> $TMP-1110
+   --vpc-id $vpcid --description "${gstype}-kibana-${space}" --region us-east-1 &> $TMP-1110
 
  securitygroupid=$( \
    aws ec2 describe-security-groups \
@@ -92,12 +92,8 @@ echo subnetid is ${subnetid}
 echo securitygroupid is ${securitygroupid}
 
 aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} \
-  --protocol tcp --port 80 --cidr 68.100.234.63/32 \
+  --protocol tcp --port 80 --cidr 0.0.0.0/0 \
   --region us-east-1 &> $TMP-1800
-
-aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} \
-  --protocol tcp --port 22 --cidr 68.100.234.63/32 \
-  --region us-east-1 &> $TMP-1900
 
 imageid=ami-b73b63a0 &> $TMP-1950 #Amazon Linux us-east-1
 echo imageid is $imageid
