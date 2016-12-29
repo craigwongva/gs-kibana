@@ -1,3 +1,5 @@
+#!/bin/bash 
+
 # Usage:
 #  <thisfile> <space>
 # where space is int, dev, etc.

@@ -5,8 +5,8 @@ Sign onto instance having AdministratorAccess.
 2. Browse at http://gsn-kibana-test.<well-known domain>
 
 Here is the calling sequence:
-1-cf-kibana.cli
-1.1-elasticsearch.cli
+1-cf-kibana
+1.1-elasticsearch
 1.2-userdata-kibana
 1.2.1-upsert-route53
 
