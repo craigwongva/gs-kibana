@@ -18,6 +18,8 @@ space=$1
 nginxuserid=gs
 nginxpassword=$2
 
+echo nginx credentials: ${nginxuserid}/${nginxpassword} &> $TMP-0900
+
 if [ ${space} = 'prod' ]; then
  gstype='gsp'
 else
