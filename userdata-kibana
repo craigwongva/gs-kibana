@@ -21,7 +21,9 @@ nginxpassword=$2
 if [ $space = 'prod' ]; then
  gstype='gsp'
 else
- if [[ $space = 'int' || $space = 'test' || $space = 'dev' || $space = 'stage' ]]; then
+ if [[ \
+  $space = 'int' || $space = 'test' || \
+  $space = 'dev' || $space = 'stage' ]]; then
   gstype='gsn'
  else
   echo Space must be either int, test, dev, stage or prod. It''s $space
@@ -34,9 +36,16 @@ fi
 ##
 
 cd ~ &> $TMP-1000
-wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.rpm" &> $TMP-1100
+
+wget --no-cookies --no-check-certificate \ 
+  --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
+  "http://download.oracle.com/otn-pub/java/jdk/8u73-b02/jdk-8u73-linux-x64.rpm" &> $TMP-1100
+
 sudo yum -y localinstall jdk-8u73-linux-x64.rpm &> $TMP-1200
-#Now Java should be installed at /usr/java/jdk1.8.0_73/jre/bin/java, and linked from /usr/bin/java.
+
+# Now Java should be installed at /usr/java/jdk1.8.0_73/jre/bin/java, 
+#  and linked from /usr/bin/java.
+
 rm /home/ec2-user/jdk-8u*-linux-x64.rpm &> $TMP-1300
 
 ##
@@ -45,7 +54,8 @@ rm /home/ec2-user/jdk-8u*-linux-x64.rpm &> $TMP-1300
 
 sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch &> $TMP-1400
 
-sudo cp $githubfolder/elasticsearch.repo /etc/yum.repos.d/elasticsearch.repo &> $TMP-1500
+sudo cp $githubfolder/elasticsearch.repo \
+  /etc/yum.repos.d/elasticsearch.repo &> $TMP-1500
 
 ##
 # Install Kibana
@@ -56,12 +66,20 @@ sudo cp $githubfolder/kibana.repo /etc/yum.repos.d/kibana.repo &> $TMP-1600
 sudo yum -y install kibana &> $TMP-1700
 
 if [ $gstype = 'gsp' ]; then
- elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsp-elasticsearch-$space --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1800
+ elasticsearchDNS=$( \
+   aws cloudformation describe-stacks --stack-name gsp-elasticsearch-$space \
+   --region us-east-1 --query Stacks[].Outputs[].[OutputValue] \
+   --output text | grep LoadBala) &> $TMP-1800
 else
- elasticsearchDNS=$(aws cloudformation describe-stacks --stack-name gsn-elasticsearch-$space --region us-east-1 --query Stacks[].Outputs[].[OutputValue] --output text | grep LoadBala) &> $TMP-1805
+ elasticsearchDNS=$( \
+   aws cloudformation describe-stacks --stack-name gsn-elasticsearch-$space \
+   --region us-east-1 --query Stacks[].Outputs[].[OutputValue] \
+   --output text | grep LoadBala) &> $TMP-1805
 fi
 
-sudo sed -i "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" /opt/kibana/config/kibana.yml &> $TMP-1900
+sudo sed -i \
+  "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" \
+  /opt/kibana/config/kibana.yml &> $TMP-1900
 
 sudo service kibana start &> $TMP-2000
 

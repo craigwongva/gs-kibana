@@ -23,7 +23,10 @@ stack=$1
 space=$2
 guipassword=$3
 
-if [[ $space = 'int' || $space = 'test' || $space = 'dev' || $space = 'stage' || $space = 'prod' ]]; then
+if [[ \
+  $space = 'int' || $space = 'test' || \
+  $space = 'dev' || $space = 'stage' || \
+  $space = 'prod' ]]; then
   echo thanks
 else
   echo The space parameter value must be either int, dev, test, stage or prod.
@@ -33,7 +36,9 @@ fi
 if [ $space = 'prod' ]; then 
  gstype='gsp'
 else 
- if [[ $space = 'int' || $space = 'test' || $space = 'dev' || $space = 'stage' ]]; then 
+ if [[ \
+   $space = 'int' || $space = 'test' || \
+   $space = 'dev' || $space = 'stage' ]]; then 
   gstype='gsn'
  else 
   echo Space must be either int, test, dev, stage or prod. It''s $space
@@ -52,15 +57,34 @@ fi
 ##
 
 if [ $gstype = 'gsp' ]; then
- vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsp-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
- subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsp-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
- aws ec2 create-security-group --group-name gsp-kibana-$space --vpc-id $vpcid --description "story#11062" --region us-east-1
- securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsp-kibana-$space --region us-east-1 --query SecurityGroups[].GroupId --output text)
+ vpcid=$( \
+   aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsp-vpc" \
+   --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1000
+ subnetid=$( \
+   aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsp-vpc: public A" \
+   --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
+
+ aws ec2 create-security-group --group-name gsp-kibana-$space \
+   --vpc-id $vpcid --description "story#11062" --region us-east-1
+
+ securitygroupid=$( \
+   aws ec2 describe-security-groups \
+   --filter Name=group-name,Values=gsp-kibana-$space \
+   --region us-east-1 --query SecurityGroups[].GroupId --output text)
 else
- vpcid=$(aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1005
- subnetid=$(aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
- aws ec2 create-security-group --group-name gsn-kibana-$space --vpc-id $vpcid --description "story#11062" --region us-east-1
- securitygroupid=$(aws ec2 describe-security-groups --filter Name=group-name,Values=gsn-kibana-$space --region us-east-1 --query SecurityGroups[].GroupId --output text)
+ vpcid=$( \
+   aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsn-vpc" \
+   --region us-east-1 --query Vpcs[].VpcId --output text) &> $TMP-1005
+ subnetid=$( \
+   aws ec2 describe-subnets --filters Name=tag:Name,"Values=gsn-vpc: public A" \
+   --region us-east-1 --query Subnets[].SubnetId --output text) &> $TMP-1100
+
+ aws ec2 create-security-group --group-name gsn-kibana-$space \
+   --vpc-id $vpcid --description "story#11062" --region us-east-1
+
+ securitygroupid=$(aws ec2 describe-security-groups \
+   --filter Name=group-name,Values=gsn-kibana-$space \
+   --region us-east-1 --query SecurityGroups[].GroupId --output text)
 fi
 
 echo vpcid is $vpcid
