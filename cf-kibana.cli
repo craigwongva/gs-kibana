@@ -1,13 +1,27 @@
-# Usage:
-#  <thisfile> <stack> <space> <guipassword>
-# where stack is like craigkibana8
-# where space is int, dev, etc.
-# where guipassword is anything like mypassword
-
-export STACK=$1
-export SPACE=$2
-export GUIPASSWORD=$3
 export TMP=/tmp/cli
+
+if [ $# -lt 3 ]
+  then
+    BLANKS='xx'
+    echo Usage:
+    echo '  ' \<thisfile\> \<stack\> \<space\> \<guipassword\>
+    echo where 
+    echo '  ' \<stack\> is any string,
+    echo '  ' \<space\> is either int, dev, test, stage or prod,
+    echo '  ' \<guipassword\> is any string
+    exit 1
+fi
+
+STACK=$1
+SPACE=$2
+GUIPASSWORD=$3
+
+if [[ $SPACE = 'int' || $SPACE = 'test' || $SPACE = 'dev' || $SPACE = 'stage' || $SPACE = 'prod' ]]; then
+  echo thanks
+else
+  echo The space parameter value must be either int, dev, test, stage or prod.
+  exit 1
+fi
 
 if [ $SPACE = 'prod' ]; then 
  gstype='gsp'
@@ -19,7 +33,6 @@ else
   exit 1
  fi
 fi
-
 
 ./elasticsearch.cli $SPACE &> $TMP-0900
 
