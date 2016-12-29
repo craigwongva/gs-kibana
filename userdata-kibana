@@ -8,7 +8,7 @@
 #
 
 TMP=/tmp/kibana
-githubfolder=/home/ec2-user/gs-kibana
+GITHUBFOLDER=/home/ec2-user/gs-kibana
 
 ##
 # Validate parameters.
@@ -18,15 +18,15 @@ space=$1
 nginxuserid=kibana
 nginxpassword=$2
 
-if [ $space = 'prod' ]; then
+if [ ${space} = 'prod' ]; then
  gstype='gsp'
 else
  if [[ \
-  $space = 'int' || $space = 'test' || \
-  $space = 'dev' || $space = 'stage' ]]; then
+  ${space} = 'int' || ${space} = 'test' || \
+  ${space} = 'dev' || ${space} = 'stage' ]]; then
   gstype='gsn'
  else
-  echo Space must be either int, test, dev, stage or prod. It''s $space
+  echo Space must be either int, test, dev, stage or prod. It''s ${space}
   exit 1
  fi
 fi
@@ -54,31 +54,31 @@ rm /home/ec2-user/jdk-8u*-linux-x64.rpm &> $TMP-1300
 
 sudo rpm --import http://packages.elastic.co/GPG-KEY-elasticsearch &> $TMP-1400
 
-sudo cp $githubfolder/elasticsearch.repo \
+sudo cp ${GITHUBFOLDER}/elasticsearch.repo \
   /etc/yum.repos.d/elasticsearch.repo &> $TMP-1500
 
 ##
 # Install Kibana
 ##
 
-sudo cp $githubfolder/kibana.repo /etc/yum.repos.d/kibana.repo &> $TMP-1600
+sudo cp ${GITHUBFOLDER}/kibana.repo /etc/yum.repos.d/kibana.repo &> $TMP-1600
 
 sudo yum -y install kibana &> $TMP-1700
 
-if [ $gstype = 'gsp' ]; then
+if [ ${gstype} = 'gsp' ]; then
  elasticsearchDNS=$( \
-   aws cloudformation describe-stacks --stack-name gsp-elasticsearch-$space \
+   aws cloudformation describe-stacks --stack-name gsp-elasticsearch-${space} \
    --region us-east-1 --query Stacks[].Outputs[].[OutputValue] \
    --output text | grep LoadBala) &> $TMP-1800
 else
  elasticsearchDNS=$( \
-   aws cloudformation describe-stacks --stack-name gsn-elasticsearch-$space \
+   aws cloudformation describe-stacks --stack-name gsn-elasticsearch-${space} \
    --region us-east-1 --query Stacks[].Outputs[].[OutputValue] \
    --output text | grep LoadBala) &> $TMP-1805
 fi
 
 sudo sed -i \
-  "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/$elasticsearchDNS:9200\"/" \
+  "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/${elasticsearchDNS}:9200\"/" \
   /opt/kibana/config/kibana.yml &> $TMP-1900
 
 sudo service kibana start &> $TMP-2000
@@ -89,10 +89,10 @@ sudo service kibana start &> $TMP-2000
 
 sudo yum -y install epel-release &> $TMP-2100
 sudo yum -y install nginx httpd-tools &> $TMP-2200
-sudo htpasswd -cb /etc/nginx/htpasswd.users $nginxuserid $nginxpassword &> $TMP-2300
+sudo htpasswd -cb /etc/nginx/htpasswd.users ${nginxuserid} ${nginxpassword} &> $TMP-2300
 
-sudo cp $githubfolder/nginx.conf /etc/nginx &> $TMP-2400
-sudo cp $githubfolder/kibana.conf /etc/nginx/conf.d &> $TMP-2500
+sudo cp ${GITHUBFOLDER}/nginx.conf /etc/nginx &> $TMP-2400
+sudo cp ${GITHUBFOLDER}/kibana.conf /etc/nginx/conf.d &> $TMP-2500
 
 # Allow time for kibana.conf to be saved.
 sleep 15
@@ -103,9 +103,9 @@ sudo service nginx start &> $TMP-2600
 # Update route53
 ##
 
-cd $githubfolder
-if [ $gstype = 'gsp' ]; then
- ./upsert-route53 gsp-kibana-$space &> $TMP-2700
+cd ${GITHUBFOLDER}
+if [ ${gstype} = 'gsp' ]; then
+ ./upsert-route53 gsp-kibana-${space} &> $TMP-2700
 else
- ./upsert-route53 gsn-kibana-$space &> $TMP-2705
+ ./upsert-route53 gsn-kibana-${space} &> $TMP-2705
 fi

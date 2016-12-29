@@ -16,15 +16,15 @@
 
 space=$1
 
-if [ $space = 'prod' ]; then
+if [ ${space} = 'prod' ]; then
  gstype='gsp'
 else
  if [[ \
-  $space = 'int' || $space = 'test' || \
-  $space = 'dev' || $space = 'stage' ]]; then
+  ${space} = 'int' || ${space} = 'test' || \
+  ${space} = 'dev' || ${space} = 'stage' ]]; then
   gstype='gsn'
  else
-  echo Space must be either int, test, dev, stage or prod. It''s $space
+  echo Space must be either int, test, dev, stage or prod. It''s ${space}
   exit 1
  fi
 fi
@@ -33,7 +33,7 @@ fi
 # Look up values to be passed during security group update.
 ##
 
-if [ $gstype = 'gsp' ]; then
+if [ ${gstype} = 'gsp' ]; then
   vpcid=$( \
     aws ec2 describe-vpcs --filter Name=tag:Name,Values="gsp-vpc" \
     --region us-east-1 --query Vpcs[].VpcId --output text)
@@ -42,7 +42,7 @@ if [ $gstype = 'gsp' ]; then
     --query Subnets[].CidrBlock --region us-east-1 --output text)
   esgatewayinstancesecuritygroupid=$( \
     aws ec2 describe-security-groups \
-    --filter Name=group-name,Values=gsp-secgrp-$space-ElasticsearchGateway* \
+    --filter Name=group-name,Values=gsp-secgrp-${space}-ElasticsearchGateway* \
     --region us-east-1 --query SecurityGroups[].GroupId --output text)
 else
   vpcid=$( \
@@ -53,19 +53,19 @@ else
     --query Subnets[].CidrBlock --region us-east-1 --output text)
   esgatewayinstancesecuritygroupid=$( \
     aws ec2 describe-security-groups \
-    --filter Name=group-name,Values=gsn-secgrp-$space-ElasticsearchGateway* \
+    --filter Name=group-name,Values=gsn-secgrp-${space}-ElasticsearchGateway* \
     --region us-east-1 --query SecurityGroups[].GroupId --output text)
 fi
 
-echo publicsubnetcidr is $publicsubnetcidr
-echo esgatewayinstancesecuritygroupid is $esgatewayinstancesecuritygroupid
+echo publicsubnetcidr is ${publicsubnetcidr}
+echo esgatewayinstancesecuritygroupid is ${esgatewayinstancesecuritygroupid}
 
 aws ec2 authorize-security-group-ingress \
-  --group-id $esgatewayinstancesecuritygroupid \
+  --group-id ${esgatewayinstancesecuritygroupid} \
   --protocol tcp --port 9200 \
-  --cidr $publicsubnetcidr --region us-east-1
+  --cidr ${publicsubnetcidr} --region us-east-1
 
 aws ec2 authorize-security-group-ingress 
-  --group-id $esgatewayinstancesecuritygroupid \
+  --group-id ${esgatewayinstancesecuritygroupid} \
   --protocol tcp --port 9300 \
-  --cidr $publicsubnetcidr --region us-east-1
+  --cidr ${publicsubnetcidr} --region us-east-1
