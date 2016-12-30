@@ -46,7 +46,7 @@ resourcegroupname=${gstype}-kibana-${space}.piazzageo.io &> $TMP-1000
 
 sudo mkdir -p /etc/letsencrypt/live/${resourcegroupname} &> $TMP-1100
 
-sudo aws s3 cp 
+sudo aws s3 cp \
  s3://${gstype}-kibana/letsencrypt/live/${resourcegroupname}/privkey.pem \
  /etc/letsencrypt/live/${resourcegroupname}/ &> $TMP-1200
 
