@@ -2,7 +2,7 @@ HOW TO USE THIS REPO
 
 Sign onto instance having AdministratorAccess.
 1. ./cf-kibana <stackname> <space> <guipassword>
-2. Browse at http://gsn-kibana-<space>.<well-known domain>
+2. Browse at https://gsn-kibana-<space>.<well-known domain>
 
 Here is the calling sequence:
 1-cf-kibana
