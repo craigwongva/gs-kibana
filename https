@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+# Enable https.
+
+export TMP=/tmp/https
+
+##
+# Validate parameters.
+##
+
+if [ $# -lt 1 ]
+  then
+    echo Usage:
+    echo '  ' \<thisfile\> \<space\>
+    echo where
+    echo '  ' \<space\> is either int, dev, test, stage or prod,
+    exit 1
+fi
+
+space=$1
+
+if [[ \
+  $space = 'int' || $space = 'test' || \
+  $space = 'dev' || $space = 'stage' || \
+  $space = 'prod' ]]; then
+  echo thanks
+else
+  echo The space parameter value must be either int, dev, test, stage or prod.
+  exit 1
+fi
+
+if [ $space = 'prod' ]; then
+  gstype='gsp'
+else
+  if [[ \
+    $space = 'int' || $space = 'test' || \
+    $space = 'dev' || $space = 'stage' ]]; then
+    gstype='gsn'
+  else
+    echo Space must be either int, test, dev, stage or prod. It''s ${space}
+    exit 1
+  fi
+fi
+
+resourcegroupname=${gstype}-kibana-${space}.piazzageo.io &> $TMP-1000
+
+sudo mkdir -p /etc/letsencrypt/live/${resourcegroupname} &> $TMP-1100
+
+sudo aws s3 cp 
+ s3://${gstype}-kibana/letsencrypt/live/${resourcegroupname}/privkey.pem \
+ /etc/letsencrypt/live/${resourcegroupname}/ &> $TMP-1200
+
+sudo aws s3 cp \
+ s3://${gstype}-kibana/letsencrypt/live/${resourcegroupname}/fullchain.pem \
+ /etc/letsencrypt/live/${resourcegroupname}/ &> $TMP-1300
+
+cd /home/ec2-user/gs-kibana &> $TMP-1400
+
+sed -i "s/KIBANASPACE/${gstype}-kibana-${space}/" nginx.conf &> $TMP-1500
+
+sudo cp nginx.conf /etc/nginx &> $TMP-1600
+
+sudo service nginx restart &> $TMP-1700
+
