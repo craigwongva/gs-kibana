@@ -112,3 +112,11 @@ if [ ${gstype} = 'gsp' ]; then
 else
  ./upsert-route53 gsn-kibana-${space} &> $TMP-2705
 fi
+
+##
+# Add https
+##
+
+cd ${GITHUBFOLDER} &> $TMP-2800
+
+./https ${space} &> $TMP-2900
