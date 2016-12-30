@@ -56,6 +56,8 @@ sudo aws s3 cp \
 
 cd /home/ec2-user/gs-kibana &> $TMP-1400
 
+cp nginx_https.conf nginx.conf &> $TMP-1450
+
 sed -i "s/KIBANASPACE/${gstype}-kibana-${space}/" nginx.conf &> $TMP-1500
 
 sudo cp nginx.conf /etc/nginx &> $TMP-1600
