@@ -24,3 +24,9 @@ cf-kibana.cli (input: STACK SPACE GUIPASSWORD) derives: gstype
 
 There is some duplicated parameter checking code for gstype. It's OK duplicated,
 in case the scripts get called individually.
+
+SET UP CERTIFICATES
+You need to set up certificates before running the kibana installation:
+1. vi certs
+2. Change the space from 'dev' to int, stage or test (prod and 'gsp' aren't recognized yet).
+3. ./certs

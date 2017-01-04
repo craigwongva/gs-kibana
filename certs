@@ -1,65 +1,86 @@
 TMP=/tmp/certs
 
+##
+# Install certbot
+##
+
 #curl -O https://dl.eff.org/certbot-auto           &> $TMP-1000
 #chmod +x certbot-auto                             &> $TMP-1100
 #sudo mv certbot-auto /usr/local/bin/certbot-auto  &> $TMP-1200
 
 ##
+# Assign parameter values
+##
+
+testprefixdash=craig-                               &> $TMP-1500
+space=int                                           &> $TMP-1600
+gstype=gsn                                          &> $TMP-1700
+
+##
+# TODO: Unhardcode these values
+##
+
+securitygroupid=sg-07efab7e                         &> $TMP-1900
+thisinstance=$(curl http://169.254.169.254/latest/meta-data/public-ipv4) &> $TMP-2000
+thisinstanceregion=us-west-2                        &> $TMP-2100
+
+##
 # Make buckets where certs will be stored
 ##
 
-
-
-
-
-
-
-
-
-
-
-
-
-#aws s3 mb s3://craig-gsn-kibana --region us-east-1 &> $TMP-1300
-#aws s3 mb s3://craig-gsp-kibana --region us-east-1 &> $TMP-1400
-
-##
-#
-##
-
-testprefixdash=craig-
-space=dev
-gstype=gsn
-
-#s3targetdir=s3://${testprefix}-${gstype}-kibana/letsencrypt/live/${gstype}-kibana-${space}.piazzageo.io/
-#aws s3 cp cert.pem      $s3targetdir
-#aws s3 cp chain.pem     $s3targetdir
-#aws s3 cp fullchain.pem $s3targetdir
-#aws s3 cp privkey.pem   $s3targetdir
+aws s3 mb s3://${testprefixdash}${gstype}-kibana --region us-east-1 &> $TMP-1300
 
 ##
 # Ensure the recordset points at this EC2 instance.
 ##
-#./upsert-route53 ${testprefixdash}${gstype}-kibana-${space}
+
+./upsert-route53 ${testprefixdash}${gstype}-kibana-${space} &> $TMP-1800
 
 ##
 # Open ssh from this instance to letsencrypt's server (i.e. 0.0.0.0/0).
 ##
-#securitygroupid=sg-07efab7e
-#thisinstance=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
-#thisinstanceregion=us-west-2
 
-#aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} \
+aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} \
   --protocol tcp --port 443 --cidr 0.0.0.0/0 \
-  --region ${thisinstanceregion} &> $TMP-1800
-
-#s/m: remove 443 open to 0.0.0.0
+  --region ${thisinstanceregion}                           &> $TMP-2200
 
 ##
-# 
+# Create certificates.
+#  pem files automatically get stored in $letsencryptsourcedir below.
 ##
 
-#certbot-auto certonly --standalone -d ${testprefixdash}${gstype}-kibana-${space}.piazzageo.io --email cwong@radiantblue.com --agree-tos --quiet
+certbot-auto certonly --standalone \
+  -d ${testprefixdash}${gstype}-kibana-${space}.piazzageo.io \
+  --email cwong@radiantblue.com --agree-tos --quiet        &> $TMP-2300
 
-sudo ls /etc/letsencrypt/live/craig-gsn-kibana-dev.piazzageo.io
-cert.pem  chain.pem  fullchain.pem  privkey.pem
+##
+# Copy certificates to S3.
+#  They will be used later by the Kibana/nginx installer.
+##
+
+letsencryptsourcedir=/etc/letsencrypt/live/${testprefixdash}${gstype}-kibana-${space}.piazzageo.io
+s3targetdir=s3://${testprefixdash}${gstype}-kibana/letsencrypt/live/${gstype}-kibana-${space}.piazzageo.io/
+tempdir=/home/ec2-user/gs-kibana
+
+rm -f ${tempdir}/cert.pem                                  &> $TMP-2400
+rm -f ${tempdir}/chain.pem                                 &> $TMP-2410
+rm -f ${tempdir}/fullchain.pem                             &> $TMP-2420
+rm -f ${tempdir}/privkey.pem                               &> $TMP-2430
+
+sudo cp ${letsencryptsourcedir}/cert.pem      ${tempdir}   &> $TMP-2500
+sudo cp ${letsencryptsourcedir}/chain.pem     ${tempdir}   &> $TMP-2510
+sudo cp ${letsencryptsourcedir}/fullchain.pem ${tempdir}   &> $TMP-2520
+sudo cp ${letsencryptsourcedir}/privkey.pem   ${tempdir}   &> $TMP-2530
+
+aws s3 cp ${tempdir}/cert.pem      ${s3targetdir}          &> $TMP-2600
+aws s3 cp ${tempdir}/chain.pem     ${s3targetdir}          &> $TMP-2610
+aws s3 cp ${tempdir}/fullchain.pem ${s3targetdir}          &> $TMP-2620
+aws s3 cp ${tempdir}/privkey.pem   ${s3targetdir}          &> $TMP-2630
+
+##
+# There is no further need for 443 to be open.
+##
+
+aws ec2 revoke-security-group-ingress --group-id ${securitygroupid} \
+  --protocol tcp --port 443 --cidr 0.0.0.0/0 \
+  --region ${thisinstanceregion} &> $TMP-2700
