@@ -1,15 +1,45 @@
-SET UP CERTIFICATES
+CREATING CERTIFICATES
 You need to set up certificates before running the kibana installation:
 1. ./certs dev craigtest
    where dev is a space like dev, int, test, stage, prod
      and craigtest is a test prefix (or you can omit this parameter for non-tests)
 
-HOW TO CREATE CERTIFICATES FOR KIBANA/NGINX
+INSTALLING KIBANA/NGINX
+
+This is a semi-automated process. 
+
+There is no need at this time to fully automate.
 
 Sign onto instance having AdministratorAccess.
 1. ./cf-kibana <stackname> <space> <guipassword>
 2. Browse at https://gsn-kibana-<space>.<well-known domain>
 
+VERIFYING RESULTS
+You should see on your EC2 instance:
+ /etc/letsencrypt/live/craig-gsn-kibana-stage.piazzageo.io
+  cert.pem
+  chain.pem
+  fullchain.pem
+  privkey.pem
+
+You should see an S3 bucket for your space:
+ craig-gsn-kibana
+  letsencrypt
+   live
+    gsn-kibana-dev.piazzageo.io
+    gsn-kibana-int.piazzageo.io
+    gsn-kibana-test.piazzageo.io
+    gsn-kibana-stage.piazzageo.io
+
+Sometimes the S3 bucket isn't created. This seems to occur intermittently,
+and it seems to be related to the security group not successfully opening 443 to 0.0.0.0/0.
+
+Before re-running the script for a space, do this for the affected space:
+sudo su -
+rm -rf /etc/letsencrypt/live/craig-gsn-kibana-stage.piazzageo.io
+exit
+
+PROGRAM FLOW
 Here is the calling sequence:
 1-cf-kibana
 1.1-elasticsearch
