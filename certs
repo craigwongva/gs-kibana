@@ -1,0 +1,65 @@
+TMP=/tmp/certs
+
+#curl -O https://dl.eff.org/certbot-auto           &> $TMP-1000
+#chmod +x certbot-auto                             &> $TMP-1100
+#sudo mv certbot-auto /usr/local/bin/certbot-auto  &> $TMP-1200
+
+##
+# Make buckets where certs will be stored
+##
+
+
+
+
+
+
+
+
+
+
+
+
+
+#aws s3 mb s3://craig-gsn-kibana --region us-east-1 &> $TMP-1300
+#aws s3 mb s3://craig-gsp-kibana --region us-east-1 &> $TMP-1400
+
+##
+#
+##
+
+testprefixdash=craig-
+space=dev
+gstype=gsn
+
+#s3targetdir=s3://${testprefix}-${gstype}-kibana/letsencrypt/live/${gstype}-kibana-${space}.piazzageo.io/
+#aws s3 cp cert.pem      $s3targetdir
+#aws s3 cp chain.pem     $s3targetdir
+#aws s3 cp fullchain.pem $s3targetdir
+#aws s3 cp privkey.pem   $s3targetdir
+
+##
+# Ensure the recordset points at this EC2 instance.
+##
+#./upsert-route53 ${testprefixdash}${gstype}-kibana-${space}
+
+##
+# Open ssh from this instance to letsencrypt's server (i.e. 0.0.0.0/0).
+##
+#securitygroupid=sg-07efab7e
+#thisinstance=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+#thisinstanceregion=us-west-2
+
+#aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} \
+  --protocol tcp --port 443 --cidr 0.0.0.0/0 \
+  --region ${thisinstanceregion} &> $TMP-1800
+
+#s/m: remove 443 open to 0.0.0.0
+
+##
+# 
+##
+
+#certbot-auto certonly --standalone -d ${testprefixdash}${gstype}-kibana-${space}.piazzageo.io --email cwong@radiantblue.com --agree-tos --quiet
+
+sudo ls /etc/letsencrypt/live/craig-gsn-kibana-dev.piazzageo.io
+cert.pem  chain.pem  fullchain.pem  privkey.pem
