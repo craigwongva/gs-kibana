@@ -1,28 +1,70 @@
+#!/bin/bash 
+##
+## Create certificates for Kibana+nginx
+
 TMP=/tmp/certs
+
+##
+# Validate parameters.
+##
+
+if [ $# -lt 1 ]
+  then
+    echo Usage:
+    echo '  ' \<thisfile\> \<space\> [\<testprefix\>]
+    echo where 
+    echo '  ' \<space\> is either int, dev, test, stage or prod,
+    echo '  ' \<testprefix\> is any string
+    exit 1
+fi
+
+if [ $# -eq 2 ]
+  then
+    testprefixdash=$2-                               &> $TMP-1070
+else
+    testprefixdash=                                  &> $TMP-1080
+fi
+
+space=$1
+
+if [ ${space} = 'prod' ]; then
+ gstype='gsp'
+else
+ if [[ \
+  ${space} = 'int' || ${space} = 'test' || \
+  ${space} = 'dev' || ${space} = 'stage' ]]; then
+  gstype='gsn'
+ else
+  echo Space must be either int, test, dev, stage or prod. It''s ${space}
+  exit 1
+ fi
+fi
 
 ##
 # Install certbot
 ##
 
-#curl -O https://dl.eff.org/certbot-auto           &> $TMP-1000
-#chmod +x certbot-auto                             &> $TMP-1100
-#sudo mv certbot-auto /usr/local/bin/certbot-auto  &> $TMP-1200
+if [ -e /usr/local/bin/certbot-auto ]
+then
+  echo certbot-auto already installed
+else
+  curl -O https://dl.eff.org/certbot-auto           &> $TMP-1090
+  chmod +x certbot-auto                             &> $TMP-1100
+  sudo mv certbot-auto /usr/local/bin/certbot-auto  &> $TMP-1200
+fi
 
 ##
-# Assign parameter values
+# Get this instance's security group id
 ##
 
-testprefixdash=craig-                               &> $TMP-1500
-space=int                                           &> $TMP-1600
-gstype=gsn                                          &> $TMP-1700
-
-##
-# TODO: Unhardcode these values
-##
-
-securitygroupid=sg-07efab7e                         &> $TMP-1900
-thisinstance=$(curl http://169.254.169.254/latest/meta-data/public-ipv4) &> $TMP-2000
-thisinstanceregion=us-west-2                        &> $TMP-2100
+securitygroupname=$(curl --silent http://169.254.169.254/latest/meta-data/security-groups) &> $TMP-1910
+sudo yum install -y jq &> $TMP-1920
+thisinstanceregion=$(curl --silent http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region) &> $TMP-1930
+thisinstanceinstanceid=$(curl --silent http://169.254.169.254/latest/meta-data/instance-id) &> $TMP-2000
+securitygroupid=$( \
+  aws ec2 describe-security-groups \
+  --filter Name=group-name,Values="${securitygroupname}" \
+  --region ${thisinstanceregion} --query SecurityGroups[].GroupId --output text)
 
 ##
 # Make buckets where certs will be stored
@@ -38,11 +80,22 @@ aws s3 mb s3://${testprefixdash}${gstype}-kibana --region us-east-1 &> $TMP-1300
 
 ##
 # Open ssh from this instance to letsencrypt's server (i.e. 0.0.0.0/0).
+#
+# The following output is echo and not redirected, because the 443 seemed 
+# to not get opened.
+#
+# The "sleep 15" is intended to allow time for 443 to get opened.
 ##
+
+echo aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} 
+echo  --protocol tcp --port 443 --cidr 0.0.0.0/0
+echo   --region ${thisinstanceregion}
 
 aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} \
   --protocol tcp --port 443 --cidr 0.0.0.0/0 \
-  --region ${thisinstanceregion}                           &> $TMP-2200
+  --region ${thisinstanceregion}
+
+sleep 15
 
 ##
 # Create certificates.

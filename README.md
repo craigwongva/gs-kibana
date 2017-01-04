@@ -1,4 +1,10 @@
-HOW TO USE THIS REPO
+SET UP CERTIFICATES
+You need to set up certificates before running the kibana installation:
+1. ./certs dev craigtest
+   where dev is a space like dev, int, test, stage, prod
+     and craigtest is a test prefix (or you can omit this parameter for non-tests)
+
+HOW TO CREATE CERTIFICATES FOR KIBANA/NGINX
 
 Sign onto instance having AdministratorAccess.
 1. ./cf-kibana <stackname> <space> <guipassword>
@@ -21,12 +27,6 @@ cf-kibana.cli (input: STACK SPACE GUIPASSWORD) derives: gstype
   calls upsert-route53 (input: recordsetname)
   calls https (input: space) that derives: gstype
 
-
 There is some duplicated parameter checking code for gstype. It's OK duplicated,
 in case the scripts get called individually.
 
-SET UP CERTIFICATES
-You need to set up certificates before running the kibana installation:
-1. vi certs
-2. Change the space from 'dev' to int, stage or test (prod and 'gsp' aren't recognized yet).
-3. ./certs
