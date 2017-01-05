@@ -1,3 +1,22 @@
+ASSESSMENT OF LEAST PRIVILEGES
+server '10429': gs-kibana/certs: generate [craig-]gsn-kibana-int.piazzageo.io certs and upload them to S3 [craig-]gsn-kibana.
+This server currently has AdministratorAccess privileges, but probably unnecessarily.
+
+py3          ?: gs-kibana/cf-kibana: use S3 certs to create https://gsn-kibana-int.piazzageo.io instance but not yet craig-gsn-kibana-int.piazzageo.io
+This server currently has AdministratorAccess privileges, enabling the server to run CloudFormation for an instance with <space>-iam-kibanaRole:
+
+gsn-iam-KibanaRole
+ cloudformation:DescribeStacks * (I don't know what this policy enables for this repo.)
+ route53:ChangeResourceRecordSets Z3CJCO7XTRTAHX (Once a Kibana instance is created and Kibana/nginx are installed, update Route53 so the instance is findable.)
+ s3:PutObject * (I don't know what this policy enables for this repo. It can probably be removed.)
+ s3:GetObject gsn-kibana/* (Gets the letsencrypt certificates for nginx from S3. Needs to be generalized to allow test prefixes like craig-gsn-kibana.)
+
+gsp-iam-KibanaRole
+ Same as gsn-iam-KibanaRole, except:
+  s3:PutObject isn't included.
+  s3:GetObject gsp-kibana/*
+
+
 CREATING CERTIFICATES
 You need to set up certificates before running the kibana installation:
 1. ./certs dev craigtest
