@@ -1,6 +1,10 @@
 ASSESSMENT OF LEAST PRIVILEGES
 server '10429': gs-kibana/certs: generate [craig-]gsn-kibana-int.piazzageo.io certs and upload them to S3 [craig-]gsn-kibana.
 This server currently has AdministratorAccess privileges, but probably unnecessarily.
+ ec2:DescribeInstances (Get security group info.)
+ s3:CreateBucket (Create a bucket that will hold the generated certificates.) 
+ route53:ChangeResourceRecordsets Z3CJCO7XTRTAHX (Set this EC2 instance to the desired domain name, e.g. gsn-kibana-dev. The suffix piazzageo.io should be specified.)
+ s3:PutObject (Write the generated certificates to S3.)
 
 py3          ?: gs-kibana/cf-kibana: use S3 certs to create https://gsn-kibana-int.piazzageo.io instance but not yet craig-gsn-kibana-int.piazzageo.io
 This server currently has AdministratorAccess privileges, enabling the server to run CloudFormation for an instance with <space>-iam-kibanaRole:
@@ -9,12 +13,12 @@ gsn-iam-KibanaRole
  cloudformation:DescribeStacks * (I don't know what this policy enables for this repo.)
  route53:ChangeResourceRecordSets Z3CJCO7XTRTAHX (Once a Kibana instance is created and Kibana/nginx are installed, update Route53 so the instance is findable.)
  s3:PutObject * (I don't know what this policy enables for this repo. It can probably be removed.)
- s3:GetObject gsn-kibana/* (Gets the letsencrypt certificates for nginx from S3. Needs to be generalized to allow test prefixes like craig-gsn-kibana.)
+ s3:GetObject gsn-kibana/asterisk (Gets the letsencrypt certificates for nginx from S3. Needs to be generalized to allow test prefixes like craig-gsn-kibana.)
 
 gsp-iam-KibanaRole
  Same as gsn-iam-KibanaRole, except:
-  s3:PutObject isn't included.
-  s3:GetObject gsp-kibana/*
+  s3:PutObject isn't included
+  s3:GetObject gsp-kibana/asterisk
 
 
 CREATING CERTIFICATES
@@ -53,9 +57,9 @@ You should see an S3 bucket for your space:
 Sometimes the S3 bucket isn't created. This seems to occur intermittently,
 and it seems to be related to the security group not successfully opening 443 to 0.0.0.0/0.
 
-Before re-running the script for a space, do this for the affected space:
+Before re-running the script for a space, do this (it seems harsh but it's OK):
 sudo su -
-rm -rf /etc/letsencrypt/live/craig-gsn-kibana-stage.piazzageo.io
+rm -rf /etc/letsencrypt
 exit
 
 PROGRAM FLOW

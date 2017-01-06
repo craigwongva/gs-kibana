@@ -104,7 +104,7 @@ sleep 15
 
 certbot-auto certonly --standalone \
   -d ${testprefixdash}${gstype}-kibana-${space}.piazzageo.io \
-  --email cwong@radiantblue.com --agree-tos --quiet        &> $TMP-2300
+  --email cwong@radiantblue.com --agree-tos --quiet --debug &> $TMP-2300
 
 ##
 # Copy certificates to S3.
