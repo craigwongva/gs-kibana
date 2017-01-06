@@ -1,52 +1,45 @@
-ASSESSMENT OF LEAST PRIVILEGES
-server '10429': gs-kibana/certs: generate [craig-]gsn-kibana-int.piazzageo.io certs and upload them to S3 [craig-]gsn-kibana.
-This server currently has AdministratorAccess privileges, but probably unnecessarily.
- ec2:DescribeInstances (Get security group info.)
- s3:CreateBucket (Create a bucket that will hold the generated certificates.) 
- route53:ChangeResourceRecordsets Z3CJCO7XTRTAHX (Set this EC2 instance to the desired domain name, e.g. gsn-kibana-dev. The suffix piazzageo.io should be specified.)
- s3:PutObject (Write the generated certificates to S3.)
-
-py3          ?: gs-kibana/cf-kibana: use S3 certs to create https://gsn-kibana-int.piazzageo.io instance but not yet craig-gsn-kibana-int.piazzageo.io
-This server currently has AdministratorAccess privileges, enabling the server to run CloudFormation for an instance with <space>-iam-kibanaRole:
-
-gsn-iam-KibanaRole
- cloudformation:DescribeStacks * (I don't know what this policy enables for this repo.)
- route53:ChangeResourceRecordSets Z3CJCO7XTRTAHX (Once a Kibana instance is created and Kibana/nginx are installed, update Route53 so the instance is findable.)
- s3:PutObject * (I don't know what this policy enables for this repo. It can probably be removed.)
- s3:GetObject gsn-kibana/asterisk (Gets the letsencrypt certificates for nginx from S3. Needs to be generalized to allow test prefixes like craig-gsn-kibana.)
-
-gsp-iam-KibanaRole
- Same as gsn-iam-KibanaRole, except:
-  s3:PutObject isn't included
-  s3:GetObject gsp-kibana/asterisk
-
-
 CREATING CERTIFICATES
-You need to set up certificates before running the kibana installation:
-1. ./certs dev craigtest
-   where dev is a space like dev, int, test, stage, prod
-     and craigtest is a test prefix (or you can omit this parameter for non-tests)
+The purpose of this step is to set up certificates that will be used by the kibana/nginx installation.
 
-INSTALLING KIBANA/NGINX
+That is, this step generates certificates appropraite for a domain like gsn-kibana-int.piazzageo.io,
+then it stores them in S3 for later use by the Kibana/nginx installer.
 
-This is a semi-automated process. 
+You can specify a prefix like 'craigtest' for testing purposes. The prefix is added to:
+  the certificate name,
+  the Route53 A record,
+  the S3 bucket name
+but not to the  
+  the instance /etc/letsencrypt/live folder.
 
-There is no need at this time to fully automate.
+This step is not ready to be run automatically. It is, however, largely automated via a bash script.
 
-Sign onto instance having AdministratorAccess.
-1. ./cf-kibana <stackname> <space> <guipassword>
-2. Browse at https://gsn-kibana-<space>.<well-known domain>
+1. Log in to any EC2 instance having the AWS CLI and these IAM privileges:
+
+     ec2:DescribeInstances 
+       Enables querying for security group info for this instance.
+
+     ec2:AuthorizeSecurityGroupIngress
+       Enables opening of port 443 to letsencrypt challenger daemon.
+
+     s3:CreateBucket 
+       Enables creation of a bucket that will hold the generated certificates.
+
+     route53:ChangeResourceRecordsets Z3CJCO7XTRTAHX 
+       Enables association of this EC2 instance's IP to the desired domain name, e.g. gsn-kibana-dev. 
+
+     s3:PutObject 
+       Write the generated certificates to S3.
+
+2. Run on the command line like this:
+
+     ./certs dev craigtest
+
+       where dev is a space like dev, int, test, stage, prod
+         and craigtest is a test prefix (or you can omit this parameter for non-tests)
 
 VERIFYING RESULTS
-You should see on your EC2 instance:
- /etc/letsencrypt/live/craig-gsn-kibana-stage.piazzageo.io
-  cert.pem
-  chain.pem
-  fullchain.pem
-  privkey.pem
-
 You should see an S3 bucket for your space:
- craig-gsn-kibana
+ gsn-kibana
   letsencrypt
    live
     gsn-kibana-dev.piazzageo.io
@@ -54,13 +47,62 @@ You should see an S3 bucket for your space:
     gsn-kibana-test.piazzageo.io
     gsn-kibana-stage.piazzageo.io
 
-Sometimes the S3 bucket isn't created. This seems to occur intermittently,
-and it seems to be related to the security group not successfully opening 443 to 0.0.0.0/0.
+If it is ever necessary to re-run a script for a space or spaces, do this (it seems harsh but it's OK):
+  sudo su -
+  rm -rf /etc/letsencrypt
+  exit
 
-Before re-running the script for a space, do this (it seems harsh but it's OK):
-sudo su -
-rm -rf /etc/letsencrypt
-exit
+You should do re-runs sparingly, because letsencrypt has a certificate generation rate limit of 20
+certificates per week.
+
+TODO: Refine the above /etc/letsencrypt path. Which directories actually need to be deleted to enable
+certificate re-generation (as opposed to automatic certificate renewal)?
+ 
+
+INSTALLING KIBANA/NGINX
+The purpose of this step is to install Kibana plus nginx, connecting to a pre-existing Elasticsearch cluster.
+
+It first enables access to a domain and an underlying Kibana instance such as http://gsn-kibana-int.piazzageo.io.
+
+Then it replaces http with https, using the certificates from S3.
+
+This is a semi-automated process.  There is no requirement at this time to fully automate.
+
+1. Log in to any EC2 instance having the AWS CLI and these IAM privileges:
+
+     AdministratorAccess
+       Enables the server to run CloudFormation for an instance with role gsn-iam-KibanaRole (or gsp-iam-KibanaRole).
+       (TODO: This is likely too strong a policy.)
+
+2. yum install -y git
+3. git clone https://github.com/craigwongva/gs-kibana
+4. ./cf-kibana <stackname> <space> <guipassword>
+
+   This bash script will determine some variable values and then launch CloudFormation.
+
+   CloudFormation will create a new EC2 instance, and will use userdata to install Kibana/nginx.
+
+   The new EC2 instance will use a role gsn-iam-KibanaRole (or gsp-iam-KibanaRole) with
+   these policies:
+
+     cloudformation:DescribeStacks * 
+       Enables querying for security group info for this instance.
+
+     route53:ChangeResourceRecordSets Z3CJCO7XTRTAHX
+       Once a Kibana instance is created and Kibana/nginx are installed, update Route53 so the instance is findable.
+
+     s3:GetObject gsn-kibana/asterisk 
+       Gets the letsencrypt certificates for nginx from S3. Needs to be generalized to allow test prefixes like craig-gsn-kibana.
+
+5. Browse to Kibana at https://gsn-kibana-<space>.piazzageo.io
+
+VERIFYING RESULTS
+You should see on your EC2 instance:
+ /etc/letsencrypt/live/gsn-kibana-<space>.piazzageo.io
+  cert.pem
+  chain.pem
+  fullchain.pem
+  privkey.pem
 
 PROGRAM FLOW
 Here is the calling sequence:
