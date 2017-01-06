@@ -102,6 +102,9 @@ sleep 15
 #  pem files automatically get stored in $letsencryptsourcedir below.
 ##
 
+sudo yum update -y
+sudo yum-complete-transaction -y
+
 certbot-auto certonly --standalone \
   -d ${testprefixdash}${gstype}-kibana-${space}.piazzageo.io \
   --email cwong@radiantblue.com --agree-tos --quiet --debug &> $TMP-2300
