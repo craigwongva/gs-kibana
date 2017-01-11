@@ -44,8 +44,26 @@ You should see an S3 bucket with folders (the following example doesn't mention 
     gsn-kibana-test.piazzageo.io
     gsn-kibana-stage.piazzageo.io
 ```
+
+If you create certificates for prod, then you would see a gsp-kibana S3 folder:
+```
+ gsp-kibana
+  letsencrypt
+   live
+    gsp-kibana-prod.piazzageo.io
+ 
+```
+
+Within each of the lowest level folders (e.g. gsn-kibana-stage.piazzageo) you would see files:
+```
+cert.pem
+chain.pem
+fullchain.pem
+privkey.pem
+```
+
 #### Re-running
-If it is ever necessary to regenerate certificates, do this first:
+If it is ever necessary to regenerate certificates, do this first (but first see the 'Note' below here):
 ```
 sudo su -
 rm -rf /etc/letsencrypt
@@ -54,8 +72,9 @@ exit
 You should do re-runs sparingly, because letsencrypt has a certificate generation rate limit of 20
 certificates per week.
 
-TODO: Refine the above /etc/letsencrypt path. Which directories actually need to be deleted to enable
-certificate re-generation (as opposed to automatic certificate renewal)?
+Note: There are directories below /etc/letsencrypt which don't need to be deleted before a re-run. 
+For example, the 'int' or 'stage' directories below /etc/letsencrypt probably don't need to be deleted before regenerating the 'test' files. 
+On the other hand, there are directories below /etc/letsencrypt which are sensed by the letsencrypt executable, which are used to discern whether a certificate is to be renewed or regenerated. I think the /etc/letsencrypt/live folder needs to be deleted before regenerating, but I am not sure.
  
 ## Installing Kibana/nginx
 The purpose of this step is to install Kibana plus nginx, connecting to a pre-existing Elasticsearch cluster.
@@ -70,7 +89,7 @@ This is a semi-automated process.  There is no requirement at this time to fully
 (TODO: This is likely too liberal a policy.)
 2. `yum install -y git`
 3. `git clone https://github.com/craigwongva/gs-kibana`
-(TODO: Move this into venicegeo.)
+(TODO: Move this repo from craigwongva into venicegeo.)
 4. `./cf-kibana <stackname> <space> <guipassword>`
 
    * stackname: This is the name of the stack that will be permanent in the AWS Console, e.g. gsn-kibana-int.
@@ -84,11 +103,11 @@ This is a semi-automated process.  There is no requirement at this time to fully
    The new EC2 instance will use a role gsn-iam-KibanaRole (or gsp-iam-KibanaRole) with
    these policies:
      * cloudformation:DescribeStacks * 
-       * Enables querying for security group info for this instance.
+       * Enables a script to query for security group info for this instance.
      * route53:ChangeResourceRecordSets Z3CJCO7XTRTAHX
-       * Once a Kibana instance is created and Kibana/nginx are installed, update Route53 so that the instance is findable.
-     * s3:GetObject gsn-kibana/* 
-       * Gets the letsencrypt certificates for nginx from S3. (TODO: Allow test prefixes like craig-gsn-kibana.)
+       * Enables a script to update the Route53 hosting zone 'Z3CJCO7XTRTAHX' to know about a new Kibana instance.
+     * s3:GetObject gsn-kibana/\*
+       * Enables a script to download the letsencrypt certificates for nginx from S3. (TODO: Allow test prefixes like craig-gsn-kibana.)
 
 5. Browse to Kibana at https://gsn-kibana-<space>.piazzageo.io
 
@@ -104,7 +123,7 @@ You should see on your EC2 instance:
 ```
 
 ### Script Flow
-Here is the calling sequence. For example, the `cf-kibana` script calls the `userdata-kibana` script, which calls the `http` script.
+Here is the calling sequence. For example, the `cf-kibana` script calls the `userdata-kibana` script, which calls the `https` script.
 ```
 cf-kibana
   elasticsearch
