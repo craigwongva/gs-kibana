@@ -8,10 +8,11 @@ You can specify a prefix like 'craig' for testing purposes. The prefix is added 
 * the certificate identity (e.g. craig-gsn-kibana-dev.piazzageo.io),
 * the Route53 A record (e.g. craig-gsn-kibana-dev .piazzageo.io.),
 * the S3 bucket name (e.g. craig-dsn-kibana)
-but not to the  
-* the instance /etc/letsencrypt/live folder.
 
-This process is not ready to be run automatically. It is, however, largely automated via a bash script.
+but the testing prefix is not added to:   
+* the /etc/letsencrypt/live folder on the EC2 instance you're using to generate the certificates.
+
+This process is not ready to be run automatically. It is, however, largely automated via a bash script `certs` (that you invoke manually as described below).
 
 1. Log in to any EC2 instance having the AWS CLI and these IAM privileges:
   * ec2:DescribeInstances 
@@ -29,11 +30,11 @@ This process is not ready to be run automatically. It is, however, largely autom
    * `dev` is a space like dev, int, test, stage, or prod, and   
    * `craig` is a test prefix (or you can omit this parameter for non-tests)
 ```
-./certs dev craigtest
+./certs dev craig
 ```
 
-## Verifying Results
-You should see an S3 bucket with folders (these don't have a `craig` test prefix):
+### Verifying Certificate Results
+You should see an S3 bucket with folders (the following example doesn't mention a `craig` test prefix):
 ```
  gsn-kibana
   letsencrypt
@@ -43,7 +44,7 @@ You should see an S3 bucket with folders (these don't have a `craig` test prefix
     gsn-kibana-test.piazzageo.io
     gsn-kibana-stage.piazzageo.io
 ```
-### Re-running
+#### Re-running
 If it is ever necessary to regenerate certificates, do this first:
 ```
 sudo su -
@@ -59,13 +60,11 @@ certificate re-generation (as opposed to automatic certificate renewal)?
 ## Installing Kibana/nginx
 The purpose of this step is to install Kibana plus nginx, connecting to a pre-existing Elasticsearch cluster.
 
-It first enables access to a domain and an underlying Kibana instance such as http://gsn-kibana-int.piazzageo.io.
+It enables access to a domain and an underlying Kibana instance such as https://gsn-kibana-int.piazzageo.io.
 
-Then it replaces http with https, using the certificates from S3.
+This is a semi-automated process.  There is no requirement at this time to fully automate. But it is largely automated, with scripts that you invoke manually as described below. 
 
-This is a semi-automated process.  There is no requirement at this time to fully automate.
-
-1. Log in to any EC2 instance having the AWS CLI and these IAM privileges:
+1. Log in to any EC2 instance having the AWS CLI and these IAM privileges (you can use the same EC2 instance that you used earlier for the certificate generation):
   * AdministratorAccess
     * Enables the server to run CloudFormation for an instance with role gsn-iam-KibanaRole (or gsp-iam-KibanaRole).
 (TODO: This is likely too liberal a policy.)
@@ -74,6 +73,10 @@ This is a semi-automated process.  There is no requirement at this time to fully
 (TODO: Move this into venicegeo.)
 4. `./cf-kibana <stackname> <space> <guipassword>`
 
+   * stackname: This is the name of the stack that will be permanent in the AWS Console, e.g. gsn-kibana-int.
+   * space: This should be `dev`, `int`, `test`, `stage` or `prod`.
+   * guipassword: This is the password that our internal staff use to access Kibana.
+   
    This bash script will determine some variable values and then launch CloudFormation.
 
    CloudFormation will create a new EC2 instance, and will use userdata to install Kibana/nginx.
@@ -89,33 +92,37 @@ This is a semi-automated process.  There is no requirement at this time to fully
 
 5. Browse to Kibana at https://gsn-kibana-<space>.piazzageo.io
 
-## Verifying Results
+### Verifying Installation Results
 
 You should see on your EC2 instance:
- /etc/letsencrypt/live/gsn-kibana-<space>.piazzageo.io
+```
+/etc/letsencrypt/live/gsn-kibana-<space>.piazzageo.io
   cert.pem
   chain.pem
   fullchain.pem
   privkey.pem
+```
 
-PROGRAM FLOW
-Here is the calling sequence:
-1-cf-kibana
-1.1-elasticsearch
-1.2-userdata-kibana
-1.2.1-upsert-route53
-1.2.2-https
+### Script Flow
+Here is the calling sequence. For example, the `cf-kibana` script calls the `userdata-kibana` script, which calls the `http` script.
+```
+cf-kibana
+  elasticsearch
+  userdata-kibana
+    upsert-route53
+    https
+```
 
 Here is the flow of parameters:
+```
 cf-kibana.cli (input: STACK SPACE GUIPASSWORD) derives: gstype
- calls elasticsearch.cli (input: SPACE) that derives: gstype
- has-hardcoded: instanceType
- looks-up: subnetId securityGroupId
- calls cloudformation (input: instanceType subnetId securityGroupId guiPassword space)
- calls userdata-kibana (input: space guiPassword) that derives: gstype recordsetname
-  calls upsert-route53 (input: recordsetname)
-  calls https (input: space) that derives: gstype
-
+  calls elasticsearch.cli (input: SPACE) that derives: gstype
+  has-hardcoded: instanceType
+  looks-up: subnetId securityGroupId
+  calls cloudformation (input: instanceType subnetId securityGroupId guiPassword space)
+  calls userdata-kibana (input: space guiPassword) that derives: gstype recordsetname
+    calls upsert-route53 (input: recordsetname)
+    calls https (input: space) that derives: gstype
+```
 There is some duplicated parameter checking code for gstype. It's OK duplicated,
 in case the scripts get called individually.
-
