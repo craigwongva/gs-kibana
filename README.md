@@ -1,43 +1,40 @@
-CREATING CERTIFICATES
-The purpose of this step is to set up certificates that will be used by the kibana/nginx installation.
+## Creating Certificates
+The purpose of this step is to set up certificates that will be used by the Kibana/nginx installation.
 
-That is, this step generates certificates appropraite for a domain like gsn-kibana-int.piazzageo.io,
+That is, this step generates certificates appropriate for a domain like gsn-kibana-int.piazzageo.io,
 then it stores them in S3 for later use by the Kibana/nginx installer.
 
-You can specify a prefix like 'craigtest' for testing purposes. The prefix is added to:
-  the certificate name,
-  the Route53 A record,
-  the S3 bucket name
+You can specify a prefix like 'craig' for testing purposes. The prefix is added to:
+* the certificate identity (e.g. craig-gsn-kibana-dev.piazzageo.io),
+* the Route53 A record (e.g. craig-gsn-kibana-dev .piazzageo.io.),
+* the S3 bucket name (e.g. craig-dsn-kibana)
 but not to the  
-  the instance /etc/letsencrypt/live folder.
+* the instance /etc/letsencrypt/live folder.
 
-This step is not ready to be run automatically. It is, however, largely automated via a bash script.
+This process is not ready to be run automatically. It is, however, largely automated via a bash script.
 
 1. Log in to any EC2 instance having the AWS CLI and these IAM privileges:
-
-     ec2:DescribeInstances 
-       Enables querying for security group info for this instance.
-
-     ec2:AuthorizeSecurityGroupIngress
-       Enables opening of port 443 to letsencrypt challenger daemon.
-
-     s3:CreateBucket 
-       Enables creation of a bucket that will hold the generated certificates.
-
-     route53:ChangeResourceRecordsets Z3CJCO7XTRTAHX 
-       Enables association of this EC2 instance's IP to the desired domain name, e.g. gsn-kibana-dev. 
-
-     s3:PutObject 
-       Write the generated certificates to S3.
+  * ec2:DescribeInstances 
+    * Enables a script to query for security group info for this instance.
+  * ec2:AuthorizeSecurityGroupIngress
+    * Enables a script to open port 443 to letsencrypt challenger daemon.
+  * s3:CreateBucket 
+    * Enables a script to create a bucket that will hold the generated certificates.
+  * route53:ChangeResourceRecordsets Z3CJCO7XTRTAHX 
+    * Enables a script to associate this EC2 instance's IP to the desired domain name, e.g. gsn-kibana-dev. 
+  * s3:PutObject 
+    * Enables a script to upload the generated certificates into the S3 bucket.
 
 2. Run on the command line like this:
+   where 
+   * `dev` is a space like dev, int, test, stage, or prod, and   
+   * `craig` is a test prefix (or you can omit this parameter for non-tests)
+```
+./certs dev craigtest
+```
 
-     ./certs dev craigtest
 
-       where dev is a space like dev, int, test, stage, prod
-         and craigtest is a test prefix (or you can omit this parameter for non-tests)
-
-VERIFYING RESULTS
+## Verifying Results
 You should see an S3 bucket for your space:
  gsn-kibana
   letsencrypt
@@ -59,7 +56,7 @@ TODO: Refine the above /etc/letsencrypt path. Which directories actually need to
 certificate re-generation (as opposed to automatic certificate renewal)?
  
 
-INSTALLING KIBANA/NGINX
+## Installing Kibana/nginx
 The purpose of this step is to install Kibana plus nginx, connecting to a pre-existing Elasticsearch cluster.
 
 It first enables access to a domain and an underlying Kibana instance such as http://gsn-kibana-int.piazzageo.io.
@@ -96,7 +93,8 @@ This is a semi-automated process.  There is no requirement at this time to fully
 
 5. Browse to Kibana at https://gsn-kibana-<space>.piazzageo.io
 
-VERIFYING RESULTS
+## Verifying Results
+
 You should see on your EC2 instance:
  /etc/letsencrypt/live/gsn-kibana-<space>.piazzageo.io
   cert.pem
