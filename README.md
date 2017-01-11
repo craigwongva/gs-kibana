@@ -25,17 +25,16 @@ This process is not ready to be run automatically. It is, however, largely autom
   * s3:PutObject 
     * Enables a script to upload the generated certificates into the S3 bucket.
 
-2. Run on the command line like this:
-   where 
+2. Run on the command line where 
    * `dev` is a space like dev, int, test, stage, or prod, and   
    * `craig` is a test prefix (or you can omit this parameter for non-tests)
 ```
 ./certs dev craigtest
 ```
 
-
 ## Verifying Results
-You should see an S3 bucket for your space:
+You should see an S3 bucket with folders (these don't have a `craig` test prefix):
+```
  gsn-kibana
   letsencrypt
    live
@@ -43,19 +42,20 @@ You should see an S3 bucket for your space:
     gsn-kibana-int.piazzageo.io
     gsn-kibana-test.piazzageo.io
     gsn-kibana-stage.piazzageo.io
-
-If it is ever necessary to re-run a script for a space or spaces, do this (it seems harsh but it's OK):
-  sudo su -
-  rm -rf /etc/letsencrypt
-  exit
-
+```
+### Re-running
+If it is ever necessary to regenerate certificates, do this first:
+```
+sudo su -
+rm -rf /etc/letsencrypt
+exit
+```
 You should do re-runs sparingly, because letsencrypt has a certificate generation rate limit of 20
 certificates per week.
 
 TODO: Refine the above /etc/letsencrypt path. Which directories actually need to be deleted to enable
 certificate re-generation (as opposed to automatic certificate renewal)?
  
-
 ## Installing Kibana/nginx
 The purpose of this step is to install Kibana plus nginx, connecting to a pre-existing Elasticsearch cluster.
 
@@ -66,14 +66,13 @@ Then it replaces http with https, using the certificates from S3.
 This is a semi-automated process.  There is no requirement at this time to fully automate.
 
 1. Log in to any EC2 instance having the AWS CLI and these IAM privileges:
-
-     AdministratorAccess
-       Enables the server to run CloudFormation for an instance with role gsn-iam-KibanaRole (or gsp-iam-KibanaRole).
-       (TODO: This is likely too strong a policy.)
-
-2. yum install -y git
-3. git clone https://github.com/craigwongva/gs-kibana
-4. ./cf-kibana <stackname> <space> <guipassword>
+  * AdministratorAccess
+    * Enables the server to run CloudFormation for an instance with role gsn-iam-KibanaRole (or gsp-iam-KibanaRole).
+(TODO: This is likely too liberal a policy.)
+2. `yum install -y git`
+3. `git clone https://github.com/craigwongva/gs-kibana`
+(TODO: Move this into venicegeo.)
+4. `./cf-kibana <stackname> <space> <guipassword>`
 
    This bash script will determine some variable values and then launch CloudFormation.
 
@@ -81,15 +80,12 @@ This is a semi-automated process.  There is no requirement at this time to fully
 
    The new EC2 instance will use a role gsn-iam-KibanaRole (or gsp-iam-KibanaRole) with
    these policies:
-
-     cloudformation:DescribeStacks * 
-       Enables querying for security group info for this instance.
-
-     route53:ChangeResourceRecordSets Z3CJCO7XTRTAHX
-       Once a Kibana instance is created and Kibana/nginx are installed, update Route53 so the instance is findable.
-
-     s3:GetObject gsn-kibana/asterisk 
-       Gets the letsencrypt certificates for nginx from S3. Needs to be generalized to allow test prefixes like craig-gsn-kibana.
+     * cloudformation:DescribeStacks * 
+       * Enables querying for security group info for this instance.
+     * route53:ChangeResourceRecordSets Z3CJCO7XTRTAHX
+       * Once a Kibana instance is created and Kibana/nginx are installed, update Route53 so that the instance is findable.
+     * s3:GetObject gsn-kibana/* 
+       * Gets the letsencrypt certificates for nginx from S3. (TODO: Allow test prefixes like craig-gsn-kibana.)
 
 5. Browse to Kibana at https://gsn-kibana-<space>.piazzageo.io
 
