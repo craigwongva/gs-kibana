@@ -109,7 +109,7 @@ This is a semi-automated process.  There is no requirement at this time to fully
      * s3:GetObject gsn-kibana/\*
        * Enables a script to download the letsencrypt certificates for nginx from S3. (TODO: Allow test prefixes like craig-gsn-kibana.)
 
-5. Browse to Kibana at https://gsn-kibana-<space>.piazzageo.io
+5. Browse to Kibana at https://gsn-kibana-\<space\>.piazzageo.io
 
 ### Verifying Installation Results
 
