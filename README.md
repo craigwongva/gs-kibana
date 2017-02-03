@@ -125,3 +125,27 @@ cf-kibana.cli (input: STACK SPACE GUIPASSWORD) derives: gstype
 There is some duplicated parameter checking code for gstype. It's OK duplicated,
 in case the scripts get called individually.
 
+INSTALLING SENSE
+
+The Sense GUI requires you to enter an Elasticsearch server address.
+
+Rather than requiring our team to look up a long name like
+internal-gsp-elast-LoadBala-9OBRHB9UYD999-9999999999.us-east-1.elb.amazonaws.com,
+add an alias CNAME record:
+
+1. git clone https://github.com/craigwongva/gs-kibana
+2. cd gs-kibana/cnames
+3. ./upsert-cnames
+
+The above will populate CNAME records for:
+* gsn-es-dev
+* gsn-es-int
+* gsn-es-test
+* gsn-es-stage
+* gsp-es-prod
+
+In the Sense GUI, enter a URL like 'http://gsn-es-dev.piazzageo.io:9200'.
+
+Reminder: You will have already authenticated into Kibana before you need to
+add the URL into the Sense GUI.
+

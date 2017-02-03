@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# Update hosted zone recordset for ES instances.
+#
+# Usage:
+#  thisfile <space>
+# where <space> is one of dev, int, test, stage, prod
+
+##
+# Validate parameters.
+##
+
+space=$1
+
+if [ ${space} = 'prod' ]; then
+ gstype='gsp'
+else
+ if [[ \
+  ${space} = 'int' || ${space} = 'test' || \
+  ${space} = 'dev' || ${space} = 'stage' ]]; then
+  gstype='gsn'
+ else
+  echo Space must be either int, test, dev, stage or prod. It''s ${space}
+  exit 1
+ fi
+fi
+
+##
+# Assumes there are no more than six Outputs
+# Assumes ES URL contains 'elb.amazonaws.com'
+##
+s1='aws cloudformation describe-stacks'
+s2a='--stack-name'
+s2b=${gstype}'-elasticsearch-'${space}
+s3='--region us-east-1'
+s4a='--query Stacks[0].Outputs['
+s4b='].OutputValue'
+s5='--output text '
+s6='grep elb.amazonaws.com'
+
+url0=`${s1} ${s2a} ${s2b} ${s3} ${s4a}0${s4b} ${s5} | ${s6}`
+url1=`${s1} ${s2a} ${s2b} ${s3} ${s4a}1${s4b} ${s5} | ${s6}`
+url2=`${s1} ${s2a} ${s2b} ${s3} ${s4a}2${s4b} ${s5} | ${s6}`
+url3=`${s1} ${s2a} ${s2b} ${s3} ${s4a}3${s4b} ${s5} | ${s6}`
+url4=`${s1} ${s2a} ${s2b} ${s3} ${s4a}4${s4b} ${s5} | ${s6}`
+url5=`${s1} ${s2a} ${s2b} ${s3} ${s4a}5${s4b} ${s5} | ${s6}`
+echo $url0 $url1 $url2 $url3 $url4 $url5

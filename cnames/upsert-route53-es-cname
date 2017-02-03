@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# Update hosted zone recordset for ES instances.
+#
+# Usage:
+#  thisfile <space> <recordsetvalue>
+# where <space> is one of dev, int, test, stage, prod
+#   and <recordsetvalue> is like internal-gsn-elast-LoadBala-1UW5ER1AXMNZI-1264212674.us-east-1.elb.amazonaws.com
+
+TMP=/tmp/upsert-route53-es-cname
+
+recordsetvalue=$2
+
+##
+# Validate parameters.
+##
+
+space=$1
+
+if [ ${space} = 'prod' ]; then
+ gstype='gsp'
+else
+ if [[ \
+  ${space} = 'int' || ${space} = 'test' || \
+  ${space} = 'dev' || ${space} = 'stage' ]]; then
+  gstype='gsn'
+ else
+  echo Space must be either int, test, dev, stage or prod. It''s ${space}
+  exit 1
+ fi
+fi
+
+recordsetname=${gstype}-es-${space}
+
+echo "{\"Comment\":\"\",\"Changes\":[{\"Action\":\"UPSERT\",\"ResourceRecordSet\":{\"Name\":\"${recordsetname}.piazzageo.io\",\"Type\":\"CNAME\",\"TTL\":10,\"ResourceRecords\":[{\"Value\":\"${recordsetvalue}\"}]}}]}" > upsert-route53-es-cname-${space}.json.tmp
+
+sudo -u ec2-user bash -c \
+  "aws route53 change-resource-record-sets --hosted-zone-id Z3CJCO7XTRTAHX --change-batch file://upsert-route53-es-cname-${space}.json.tmp" &> $TMP-1000-${space}

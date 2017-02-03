@@ -1,0 +1,5 @@
+./upsert-route53-es-cname dev `./get-es-url dev`
+./upsert-route53-es-cname int `./get-es-url int`
+./upsert-route53-es-cname test `./get-es-url test`
+./upsert-route53-es-cname stage `./get-es-url stage`
+./upsert-route53-es-cname prod `./get-es-url prod`
