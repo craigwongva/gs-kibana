@@ -164,7 +164,15 @@ The above will populate CNAME records for:
 * `gsn-es-stage`
 * `gsp-es-prod`
 
-In the Sense GUI, enter a URL like `http://gsn-es-dev.piazzageo.io:9200`.
+In the Sense GUI, enter a URL like `http://gsn-es-dev.piazzageo.io:9200` (or `http://gsp-es-prod.piazzageo.io:9200`).
 
 Reminder: You will have already authenticated into Kibana before you need to
 add the URL into the Sense GUI.
+
+### Script Flow
+Here is the calling sequence.
+
+upsert-cnames
+  get-es-url
+  upsert-route53-es-cname
+
