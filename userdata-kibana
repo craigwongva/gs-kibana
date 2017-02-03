@@ -85,7 +85,13 @@ sudo sed -i \
 
 sudo service kibana start &> $TMP-2000
 
-#sudo /opt/kibana/bin/kibana plugin --install elastic/sense &> $TMP-1950
+# Allow time for kibana service start
+sleep 5 &> TMP-2010
+
+# Must occur after service has started (see kibana#6085)
+sudo /opt/kibana/bin/kibana plugin --install elastic/sense &> $TMP-2020
+
+sudo service kibana restart &> $TMP-2030
 
 ##
 # Install nginx
