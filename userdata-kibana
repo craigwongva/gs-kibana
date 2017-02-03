@@ -83,9 +83,9 @@ sudo sed -i \
   "s/# elasticsearch.url: \"http:\/\/localhost:9200\"/elasticsearch.url: \"http:\/\/${elasticsearchDNS}:9200\"/" \
   /opt/kibana/config/kibana.yml &> $TMP-1900
 
-sudo /opt/kibana/bin/kibana plugin --install elastic/sense &> $TMP-1950
-
 sudo service kibana start &> $TMP-2000
+
+#sudo /opt/kibana/bin/kibana plugin --install elastic/sense &> $TMP-1950
 
 ##
 # Install nginx
