@@ -62,19 +62,36 @@ fullchain.pem
 privkey.pem
 ```
 
-#### Re-running
-If it is ever necessary to regenerate certificates, do this first (but first see the 'Note' below here):
+## Renewing Certificates
+The process of 'renewing' certificates is a little misleading, because renewing actually involves generating new certificates.
+
+Do this manually (this could be scripted but hasn't been yet):
 ```
 sudo su -
 rm -rf /etc/letsencrypt
+rm -rf /home/ec2-user/.local/share/letsencrypt
+unset PYTHON_INSTALL_LAYOUT
 exit
 ```
-You should do re-runs sparingly, because letsencrypt has a certificate generation rate limit of 20
+
+To verify that everything will succeed, do this manually:
+```
+certbot-auto certonly --standalone -d gsn-kibana-dev.piazzageo.io --email myemail@radiantblue.com --agree-tos --quiet --debug
+```
+
+Then run on the command line where 
+   * `dev` is a space like dev, int, test, stage, or prod, and   
+   * `craig` is a test prefix (or you can omit this parameter for non-tests)
+```
+./certs dev
+```
+
+You should do runs and re-runs sparingly, because letsencrypt has a certificate generation rate limit of 20
 certificates per week.
 
-Note: There are directories below /etc/letsencrypt which don't need to be deleted before a re-run. 
-For example, the 'int' or 'stage' directories below /etc/letsencrypt probably don't need to be deleted before regenerating the 'test' files. 
-On the other hand, there are directories below /etc/letsencrypt which are sensed by the letsencrypt executable, which are used to discern whether a certificate is to be renewed or regenerated. I think the /etc/letsencrypt/live folder needs to be deleted before regenerating, but I am not sure.
+The `certs` process will upload .pem files up to S3 (either `gsn-kibana` or `gsp-kibana`).
+
+Then use the below instructions to create new Kibana stacks (e.g. gsn-kibana-dev, gsp-kibana-prod) via CloudFormation. The new stack will replace the appropriate Route53 entries. The old stacks (e.g. gsn-qibana-dev, gsp-qibana-dev) can be deleted.
  
 ## Installing Kibana/nginx
 The purpose of this step is to install Kibana plus nginx, connecting to a pre-existing Elasticsearch cluster.
