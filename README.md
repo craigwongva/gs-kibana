@@ -1,3 +1,13 @@
+## Summary
+
+To generate new certificates:
+git clone https://github.com/craigwongva/gs-kibana
+cd gs-kibana
+./certs dev
+./certs int
+./certs test
+./certs stage
+
 ## Creating Certificates
 The purpose of this step is to set up certificates that will be used by the Kibana/nginx installation.
 
@@ -62,7 +72,11 @@ fullchain.pem
 privkey.pem
 ```
 
+The timestamps should show that the files are newly created. If they are old, then check /var/log/letsencrypt for a message like "Client lacks sufficient authorization." This message actually seems to indicate a letsencrypt server problem. That is, in June 2017 I ran successfully "./certs dev" and "./certs int" but then "./certs test" and "./certs stage" failed and "./certs prod" succeeded. I then tried "./certs test" and "./certs stage" again and they succeeded.
+
 ## Renewing Certificates
+Note: This section is redundant if you read and acted upon the above section.
+
 The process of 'renewing' certificates is a little misleading, because renewing actually involves generating new certificates.
 
 Do this manually (this could be scripted but hasn't been yet):
@@ -90,6 +104,10 @@ You should do runs and re-runs sparingly, because letsencrypt has a certificate 
 certificates per week.
 
 The `certs` process will upload .pem files up to S3 (either `gsn-kibana` or `gsp-kibana`).
+
+Then use the below instructions to create new Kibana stacks (e.g. gsn-kibana-dev, gsp-kibana-prod) via CloudFormation. The new stack will replace the appropriate Route53 entries. The old stacks (e.g. gsn-qibana-dev, gsp-qibana-dev) can be deleted.
+ 
+## Installing Kibana/nginx
 
 Then use the below instructions to create new Kibana stacks (e.g. gsn-kibana-dev, gsp-kibana-prod) via CloudFormation. The new stack will replace the appropriate Route53 entries. The old stacks (e.g. gsn-qibana-dev, gsp-qibana-dev) can be deleted.
  
@@ -179,10 +197,6 @@ The above will populate CNAME records for:
 * `gsn-es-int`
 * `gsn-es-test`
 * `gsn-es-stage`
-* `gsp-es-prod`
-
-In the Sense GUI, enter a URL like `http://gsn-es-dev.piazzageo.io:9200` (or `http://gsp-es-prod.piazzageo.io:9200`).
-
 Reminder: You will have already authenticated into Kibana before you need to
 add the URL into the Sense GUI.
 
