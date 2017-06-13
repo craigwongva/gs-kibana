@@ -107,7 +107,7 @@ echo imageid is $imageid
 
 aws cloudformation create-stack --stack-name $stack \
   --template-url \
-    https://s3.amazonaws.com/venicegeo-devops-dev-kibana-project/cf-kibana.json \
+    https://raw.githubusercontent.com/gsoyka/gs-kibana/elb_option/cf-kibana.json \
   --region us-east-1 \
   --parameters ParameterKey=instanceType,ParameterValue=t2.medium \
     ParameterKey=subnetId,ParameterValue=${subnetid} \
