@@ -129,7 +129,7 @@
               "",
               [
                 "#!/bin/bash -ex\n",
-                "yum install git -y\n",
+                "yum install git jq -y\n",
                 "sudo -u ec2-user bash -c 'cd /home/ec2-user; git clone https://github.com/gsoyka/gs-kibana.git && cd gs-kibana && git checkout elb_option > /tmp/u01 2>&1 '\n",
                 {
                   "Fn::Join":[
