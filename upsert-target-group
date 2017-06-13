@@ -12,14 +12,14 @@ PORT="80"
 RECORDSETNAME=$1
 INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
-sudo -u ec2-user bash -c \ ELB_ARN=$(aws elbv2 describe-load-balancers --region $REGION | jq --raw-output '.LoadBalancers[] | select(.LoadBalancerName | contains("$RECORDSETNAME")) | .LoadBalancerArn')
+sudo -u ec2-user bash -c \ ELB_ARN=$(aws elbv2 describe-load-balancers --region $REGION | jq --raw-output '.LoadBalancers[] | select(.LoadBalancerName | contains("$RECORDSETNAME")) | .LoadBalancerArn') &> $TMP-1000
 
 sudo -u ec2-user bash -c \
-  'aws elbv2 register-targets --region $REGION --target-group-arn $ELB_ARN --targets Id=$INSTANCE_ID,Port=$PORT' &> $TMP-1000
+  'aws elbv2 register-targets --region $REGION --target-group-arn $ELB_ARN --targets Id=$INSTANCE_ID,Port=$PORT' >> $TMP-1000
 
-TG_ARN=$(aws elbv2 describe-target-groups --region $REGION --load-balancer-arn $ELB_ARN | jq --raw-output '.TargetGroups[] | .TargetGroupArn')
+TG_ARN=$(aws elbv2 describe-target-groups --region $REGION --load-balancer-arn $ELB_ARN | jq --raw-output '.TargetGroups[] | .TargetGroupArn') >> $TMP-1000
 
-TARGETS=$(aws elbv2 describe-target-health --region $REGION --target-group-arn $TG_ARN | jq --raw-output '.TargetHealthDescriptions[] | .Target | .Id')
+TARGETS=$(aws elbv2 describe-target-health --region $REGION --target-group-arn $TG_ARN | jq --raw-output '.TargetHealthDescriptions[] | .Target | .Id') >> $TMP-1000
 
 # Deregister any targets that are not the current instance
 for TARGET in $TARGETS
