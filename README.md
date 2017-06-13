@@ -168,7 +168,7 @@ cf-kibana
 ```
 
 Here is the flow of parameters:
-```
+``` 
 cf-kibana.cli (input: STACK SPACE GUIPASSWORD) derives: gstype
   calls elasticsearch.cli (input: SPACE) that derives: gstype
   has-hardcoded: instanceType
