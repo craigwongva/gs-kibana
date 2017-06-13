@@ -18,7 +18,7 @@ echo "ELB ARN: $ELB_ARN"
 TG_ARN=$(aws elbv2 describe-target-groups --region $REGION --load-balancer-arn $ELB_ARN | jq --raw-output '.TargetGroups[] | .TargetGroupArn') >> $TMP-1000
 
 echo "TG ARN: $TG_ARN"
-aws elbv2 register-targets --region $REGION --target-group-arn $ELB_ARN --targets Id=$INSTANCE_ID,Port=$PORT >> $TMP-1000
+aws elbv2 register-targets --region $REGION --target-group-arn $TG_ARN --targets Id=$INSTANCE_ID,Port=$PORT >> $TMP-1000
 
 TARGETS=$(aws elbv2 describe-target-health --region $REGION --target-group-arn $TG_ARN | jq --raw-output '.TargetHealthDescriptions[] | .Target | .Id') >> $TMP-1000
 
