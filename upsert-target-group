@@ -26,6 +26,6 @@ for TARGET in $TARGETS
 do
   if [ $TARGET != $INSTANCE_ID ]
   then
-    aws elbv2 deregister-targets --region $REGION --target-group-arn $TG_ARN --targets Id=$TARGET,Port=$PORT
+    #aws elbv2 deregister-targets --region $REGION --target-group-arn $TG_ARN --targets Id=$TARGET,Port=$PORT
   fi
 done    
