@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Enable https.
+# Enable http.
 
-export TMP=/tmp/https
+export TMP=/tmp/http
 
 ##
 # Validate parameters.
@@ -44,23 +44,13 @@ fi
 
 resourcegroupname=${gstype}-kibana-${space}.piazzageo.io &> $TMP-1000
 
-sudo mkdir -p /etc/letsencrypt/live/${resourcegroupname} &> $TMP-1100
-
-sudo aws s3 cp \
- s3://${gstype}-kibana/letsencrypt/live/${resourcegroupname}/privkey.pem \
- /etc/letsencrypt/live/${resourcegroupname}/ &> $TMP-1200
-
-sudo aws s3 cp \
- s3://${gstype}-kibana/letsencrypt/live/${resourcegroupname}/fullchain.pem \
- /etc/letsencrypt/live/${resourcegroupname}/ &> $TMP-1300
-
 cd /home/ec2-user/gs-kibana &> $TMP-1400
 
-cp nginx_https.conf nginx_https_local.conf &> $TMP-1450
+cp nginx_http.conf nginx_http_local.conf &> $TMP-1450
 
-sed -i "s/KIBANASPACE/${gstype}-kibana-${space}/" nginx_https_local.conf &> $TMP-1500
+sed -i "s/KIBANASPACE/${gstype}-kibana-${space}/" nginx_http_local.conf &> $TMP-1500
 
-sudo cp nginx_https_local.conf /etc/nginx/nginx.conf &> $TMP-1600
+sudo cp nginx_http_local.conf /etc/nginx/nginx.conf &> $TMP-1600
 
 sudo service nginx restart &> $TMP-1700
 

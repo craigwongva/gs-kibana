@@ -92,7 +92,7 @@ echo subnetid is ${subnetid}
 echo securitygroupid is ${securitygroupid}
 
 aws ec2 authorize-security-group-ingress --group-id ${securitygroupid} \
-  --protocol tcp --port 443 --cidr 0.0.0.0/0 \
+  --protocol tcp --port 80 --cidr 0.0.0.0/0 \
   --region us-east-1 &> $TMP-1800
 
 imageid=ami-b73b63a0 &> $TMP-1950 #Amazon Linux us-east-1

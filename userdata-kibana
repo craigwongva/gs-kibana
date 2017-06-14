@@ -110,21 +110,21 @@ sleep 15 &> $TMP-2550
 sudo service nginx start &> $TMP-2600
 
 ##
-# Update route53
+# Update ELB target group
 ##
 
 cd ${GITHUBFOLDER} &> $TMP-2650
 
 if [ ${gstype} = 'gsp' ]; then
- ./upsert-route53 gsp-kibana-${space} &> $TMP-2700
+ ./upsert-target-group gsp-kibana-${space} &> $TMP-2700
 else
- ./upsert-route53 gsn-kibana-${space} &> $TMP-2705
+ ./upsert-target-group gsn-kibana-${space} &> $TMP-2705
 fi
 
 ##
-# Add https
+# Add http
 ##
 
 cd ${GITHUBFOLDER} &> $TMP-2800
 
-./https ${space} &> $TMP-2900
+./http ${space} &> $TMP-2900
